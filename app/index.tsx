@@ -23,7 +23,7 @@ export default function HomeScreen() {
               </Text>
               
               <Text className="text-gray-300 text-base text-center leading-6 px-4">
-                Découvrez, écoutez et apprenez le Coran avec Tajwid, traductions, 
+                Découvrez, écoutez et apprenez le Coran avec Tajwid, encore mieux traductions, 
                 tafsir, horaires de prières, Qibla et invocations.
               </Text>
             </View>
@@ -35,6 +35,17 @@ export default function HomeScreen() {
                   width: Math.min(screenWidth * 1.2, 350),
                   height: Math.min(screenHeight * 1.2, 350),
                   borderRadius: 16,
+                }}
+                resizeMode="contain"
+              />
+              <Image
+                source={require("@/assets/images/quran.png")}
+                style={{
+                  position: 'absolute',
+                  width: Math.min(screenWidth * 0.6, 200),
+                  height: Math.min(screenHeight * 0.6, 200),
+                  borderRadius: 16,
+                  bottom: '2%', 
                 }}
                 resizeMode="contain"
               />
