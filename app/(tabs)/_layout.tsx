@@ -1,21 +1,32 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Text, useColorScheme } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colorScheme === 'dark' ? '#fff' : '#007AFF',
-        headerShown: true,
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#040C23',
+          borderTopWidth: 0,
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: '#F9BD64',
+        tabBarInactiveTintColor: '#B8C5D6',
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'New App',
-          tabBarIcon: () => <Text style={{color: '#ccc'}}>App</Text>, 
+          title: 'Coran',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
