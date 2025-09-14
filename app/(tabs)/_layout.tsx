@@ -15,7 +15,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'New App',
-          tabBarIcon: () => <Text style={{color: '#ccc'}}>tabtab</Text>, 
+          tabBarIcon: () => <Text style={{color: '#ccc'}}>App</Text>, 
         }}
       />
     </Tabs>

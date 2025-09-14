@@ -1,22 +1,13 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
-import 'react-native-reanimated';
+import { Text, View } from "react-native";
+import "../../global.css";
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
+export default function App() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <View className="flex-1 items-center justify-center bg-red-200">
+      <Text className="text-2xl font-bold text-blue-500">
+        Welcome to Nativewind!
+      </Text>
+      <Text className="text-xs ">My name is Mahomed CISSOKHO. I am Software engineer</Text>
+    </View>
   );
 }
