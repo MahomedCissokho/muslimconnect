@@ -1,0 +1,63 @@
+{
+  "common": {
+    "appName": "Muslim Universe",
+    "continue": "Continue",
+    "retry": "Retry",
+    "loading": "Loading...",
+    "error": "Error",
+    "comingSoon": "Coming soon",
+    "total": "Total",
+    "verses": "verses",
+    "surahs": "surahs"
+  },
+  "onboarding": {
+    "description": "Discover, listen and learn the Quran with Tajweed, plus translations, tafsir, prayer times, Qibla and supplications."
+  },
+  "home": {
+    "greeting": "Assalamu alaikum",
+    "lastRead": "Last Read",
+    "ayahNo": "Ayah No"
+  },
+  "tabs": {
+    "quran": "Quran",
+    "prayer": "Prayer",
+    "hadith": "Hadith",
+    "duas": "Duas",
+    "bookmark": "Bookmark"
+  },
+  "quran": {
+    "loading": "Loading Quran...",
+    "surah": "Surah",
+    "page": "Page",
+    "juzz": "Juzz",
+    "hizb": "Hizb",
+    "hizbQuarter": "Hizb ¼",
+    "verse": "V.",
+    "starts": "Starts",
+    "ends": "Ends",
+    "meccan": "MECCAN",
+    "medinan": "MEDINAN"
+  },
+  "prayer": {
+    "title": "Prayer Times"
+  },
+  "hadith": {
+    "title": "Hadith"
+  },
+  "duas": {
+    "title": "Duas"
+  },
+  "bookmark": {
+    "title": "Bookmarks"
+  },
+  "errors": {
+    "generic": "An error occurred",
+    "network": "Check your internet connection",
+    "notFound": "Resource not found",
+    "server": "Server error - Please try again later",
+    "timeout": "Request timeout",
+    "loadFailed": "Failed to load",
+    "audioNotAvailable": "Audio not available for this verse",
+    "audioPlaybackFailed": "Failed to play audio"
+  }
+}

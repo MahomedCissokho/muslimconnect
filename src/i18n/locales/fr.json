@@ -1,0 +1,63 @@
+{
+  "common": {
+    "appName": "Muslim Universe",
+    "continue": "Continuer",
+    "retry": "Réessayer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "comingSoon": "Bientôt disponible",
+    "total": "Total",
+    "verses": "versets",
+    "surahs": "sourates"
+  },
+  "onboarding": {
+    "description": "Découvrez, écoutez et apprenez le Coran avec Tajwid, encore mieux traductions, tafsir, horaires de prières, Qibla et invocations."
+  },
+  "home": {
+    "greeting": "Assalamu alaikum",
+    "lastRead": "Dernière lecture",
+    "ayahNo": "Ayah N°"
+  },
+  "tabs": {
+    "quran": "Coran",
+    "prayer": "Prière",
+    "hadith": "Hadiths",
+    "duas": "Duas",
+    "bookmark": "Favoris"
+  },
+  "quran": {
+    "loading": "Chargement du Coran...",
+    "surah": "Sourate",
+    "page": "Page",
+    "juzz": "Juzz",
+    "hizb": "Hizb",
+    "hizbQuarter": "Hizb ¼",
+    "verse": "V.",
+    "starts": "Début",
+    "ends": "Fin",
+    "meccan": "MECQUOISE",
+    "medinan": "MÉDINOISE"
+  },
+  "prayer": {
+    "title": "Horaires de Prière"
+  },
+  "hadith": {
+    "title": "Hadiths"
+  },
+  "duas": {
+    "title": "Duas"
+  },
+  "bookmark": {
+    "title": "Favoris"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue",
+    "network": "Vérifiez votre connexion internet",
+    "notFound": "Ressource non trouvée",
+    "server": "Erreur serveur - Réessayez plus tard",
+    "timeout": "Délai d'attente dépassé",
+    "loadFailed": "Échec du chargement",
+    "audioNotAvailable": "Audio non disponible pour ce verset",
+    "audioPlaybackFailed": "Impossible de lire l'audio"
+  }
+}
