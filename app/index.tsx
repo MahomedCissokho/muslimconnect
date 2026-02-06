@@ -1,71 +1,115 @@
-import { router } from "expo-router";
-import React from "react";
-import { Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import "../global.css";
+import { router } from 'expo-router';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import bgOnboarding from '../assets/images/bgonboarding.png';
+import quranImage from '../assets/images/quran.png';
+import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../src/constants';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function HomeScreen() {
+export default function OnboardingScreen() {
+  const { t } = useTranslation();
+
   const handleGetStarted = () => {
-    router.push('/(tabs)');
+    router.replace('/(tabs)');
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-500">
-      <View className="flex-1 px-6 py-8">
-        <View className="flex-1 justify-between gap-4">
-          
-          <View className="flex-1 justify-center items-center">
-            <View className="mb-8">
-              <Text className="text-accent-purple text-4xl font-bold text-center mb-10">
-                Muslim Universe
-              </Text>
-              
-              <Text className="text-gray-300 text-base text-center leading-6 px-4">
-                Découvrez, écoutez et apprenez le Coran avec Tajwid, encore mieux traductions, 
-                tafsir, horaires de prières, Qibla et invocations.
-              </Text>
-            </View>
-
-            <View className="flex items-center justify-center my-8">
-              <Image
-                source={require("@/assets/images/bgonboarding.png")}
-                style={{
-                  width: Math.min(screenWidth * 1.2, 350),
-                  height: Math.min(screenHeight * 1.2, 350),
-                  borderRadius: 16,
-                }}
-                resizeMode="contain"
-              />
-              <Image
-                source={require("@/assets/images/quran.png")}
-                style={{
-                  position: 'absolute',
-                  width: Math.min(screenWidth * 0.6, 200),
-                  height: Math.min(screenHeight * 0.6, 200),
-                  borderRadius: 16,
-                  bottom: '2%', 
-                }}
-                resizeMode="contain"
-              />
-            </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.mainSection}>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>{t('common.appName')}</Text>
+            <Text style={styles.description}>{t('onboarding.description')}</Text>
           </View>
 
-          <View className="pb-8">
-            <TouchableOpacity
-              onPress={handleGetStarted}
-              activeOpacity={.7}
-              className="bg-accent-orange mx-8 py-4 rounded-full"
-            >
-              <Text className=" text-lg text-accent-purple font-semibold text-center">
-                Continuer
-              </Text>
-            </TouchableOpacity>
+          <View style={styles.imageContainer}>
+            <Image source={bgOnboarding} style={styles.bgImage} resizeMode="contain" />
+            <Image source={quranImage} style={styles.quranImage} resizeMode="contain" />
           </View>
+        </View>
 
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            onPress={handleGetStarted}
+            activeOpacity={0.7}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>{t('common.continue')}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.primary,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING['2xl'],
+    paddingVertical: SPACING['3xl'],
+    justifyContent: 'space-between',
+  },
+  mainSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContainer: {
+    marginBottom: SPACING['3xl'],
+  },
+  title: {
+    color: COLORS.purple,
+    fontSize: 32,
+    fontFamily: FONTS.bold,
+    textAlign: 'center',
+    marginBottom: SPACING.xl,
+  },
+  description: {
+    color: COLORS.gray300,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: SPACING.lg,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: SPACING['3xl'],
+  },
+  bgImage: {
+    width: Math.min(screenWidth * 1.2, 350),
+    height: Math.min(screenHeight * 0.4, 350),
+    borderRadius: BORDER_RADIUS.xl,
+  },
+  quranImage: {
+    position: 'absolute',
+    width: Math.min(screenWidth * 0.6, 200),
+    height: Math.min(screenHeight * 0.25, 200),
+    borderRadius: BORDER_RADIUS.xl,
+    bottom: '2%',
+  },
+  buttonContainer: {
+    paddingBottom: SPACING['3xl'],
+  },
+  button: {
+    backgroundColor: COLORS.gold,
+    marginHorizontal: SPACING['3xl'],
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.full,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: COLORS.purple,
+    fontFamily: FONTS.semiBold,
+    textAlign: 'center',
+  },
+});
