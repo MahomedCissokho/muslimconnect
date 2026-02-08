@@ -4,10 +4,10 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import numberBg from '../../assets/images/number.png';
 import { COLORS, FONTS, SPACING } from '../constants';
-import type { Surah } from '../types';
+import type { SurahInfo } from '../data/surahs';
 
 interface SurahListProps {
-  surahs: Surah[];
+  surahs: SurahInfo[];
   onSurahPress?: (surahNumber: number) => void;
 }
 
@@ -34,7 +34,7 @@ export const SurahList: React.FC<SurahListProps> = ({ surahs, onSurahPress }) =>
             </View>
 
             <View style={styles.surahInfo}>
-              <Text style={styles.surahEnglishName}>{surah.englishName}</Text>
+              <Text style={styles.surahEnglishName}>{surah.transliteration}</Text>
               <Text style={styles.surahDetails}>
                 {getRevelationType(surah.revelationType)} • {surah.numberOfAyahs} {t('common.verses').toUpperCase()}
               </Text>

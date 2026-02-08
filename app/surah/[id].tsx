@@ -1,10 +1,11 @@
-import { Audio } from 'expo-av';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Alert,
+  Dimensions,
   Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   ScrollView,
   Share,
   StyleSheet,
@@ -13,18 +14,25 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 import backIcon from '../../assets/images/back.png';
 import numberBg from '../../assets/images/number.png';
-import playIcon from '../../assets/images/play.png';
 import shareIcon from '../../assets/images/share.png';
 import { LoadingIndicator } from '../../src/components';
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../../src/constants';
+import { useAudio } from '../../src/contexts/AudioContext';
+import { useSettings } from '../../src/contexts/SettingsContext';
+import { buildAudioUrl } from '../../src/utils/audioUrl';
 import { quranService } from '../../src/services/quran';
+import type { AudioTrack } from '../../src/services/audio';
 import type { SurahData, Ayah } from '../../src/types';
 
-interface AyahWithTranslation extends Ayah {
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+
+interface AyahWithExtra extends Ayah {
   translation?: string;
+  transliteration?: string;
   audioUrl?: string;
 }
 
@@ -34,12 +42,70 @@ export default function SurahDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const surahNumber = id ? parseInt(id, 10) : null;
 
+  const { reciterId, displayOptions } = useSettings();
+  const { playbackState, loadPlaylist, playTrack, pause, resume, stop } = useAudio();
+
   const [surahData, setSurahData] = useState<SurahData | null>(null);
-  const [ayahsWithTranslation, setAyahsWithTranslation] = useState<AyahWithTranslation[]>([]);
+  const [ayahs, setAyahs] = useState<AyahWithExtra[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [playingAyahNumber, setPlayingAyahNumber] = useState<number | null>(null);
+
+  // Play All state
+  const [playAllActive, setPlayAllActive] = useState(false);
+
+  // Scroll refs
+  const scrollViewRef = useRef<ScrollView>(null);
+  const ayahRefs = useRef<Record<number, View | null>>({});
+  const currentScrollY = useRef(0);
+  const lastScrolledAyah = useRef<number | null>(null);
+
+  // Track if the current audio belongs to THIS surah
+  const isThisSurahPlaying =
+    playbackState.currentTrack?.surahNumber === surahNumber &&
+    (playbackState.isPlaying || playbackState.isPaused || playbackState.isLoading);
+
+  // Reset playAllActive only when audio truly stops
+  useEffect(() => {
+    if (!playbackState.currentTrack && !playbackState.isLoading) {
+      setPlayAllActive(false);
+    }
+  }, [playbackState.currentTrack, playbackState.isLoading]);
+
+  // Track scroll position
+  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    currentScrollY.current = e.nativeEvent.contentOffset.y;
+  }, []);
+
+  // Scroll an ayah to center of screen using measure()
+  const scrollToAyah = useCallback((globalNumber: number) => {
+    const ayahView = ayahRefs.current[globalNumber];
+    if (!ayahView || !scrollViewRef.current) return;
+
+    ayahView.measure((_x, _y, _w, h, _pageX, pageY) => {
+      // pageY = ayah's current position on screen
+      // We want the ayah centered vertically
+      const ayahCenter = pageY + h / 2;
+      const screenCenter = SCREEN_HEIGHT / 2;
+      const scrollDelta = ayahCenter - screenCenter;
+      const targetY = currentScrollY.current + scrollDelta;
+      scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY), animated: true });
+    });
+  }, []);
+
+  // Auto-scroll to current playing ayah
+  useEffect(() => {
+    const currentGlobal = playbackState.currentTrack?.globalAyahNumber;
+    if (
+      currentGlobal &&
+      playbackState.currentTrack?.surahNumber === surahNumber &&
+      (playbackState.isPlaying || playbackState.isLoading) &&
+      currentGlobal !== lastScrolledAyah.current
+    ) {
+      lastScrolledAyah.current = currentGlobal;
+      // Small delay so the View is mounted and measurable
+      setTimeout(() => scrollToAyah(currentGlobal), 200);
+    }
+  }, [playbackState.currentTrack?.globalAyahNumber, playbackState.currentTrack?.surahNumber, playbackState.isPlaying, playbackState.isLoading, surahNumber, scrollToAyah]);
 
   const fetchSurahData = useCallback(async () => {
     if (!surahNumber) return;
@@ -48,103 +114,96 @@ export default function SurahDetailsScreen() {
       setLoading(true);
       setError(null);
 
-      // Fetch Arabic, translation, and audio in parallel
       const translationEdition = i18n.language === 'fr' ? 'fr.hamidullah' : 'en.sahih';
 
-      const [arabicData, translationData, audioData] = await Promise.all([
+      const [arabicData, translationData, transliterationData, audioData] = await Promise.all([
         quranService.getSurah(surahNumber),
         quranService.getSurahWithTranslation(surahNumber, translationEdition),
-        quranService.getSurahWithAudio(surahNumber, 'ar.alafasy'),
+        quranService.getSurahWithTranslation(surahNumber, 'en.transliteration').catch(() => null),
+        quranService.getSurahWithAudio(surahNumber, reciterId),
       ]);
 
       setSurahData(arabicData);
 
-      // Merge Arabic ayahs with translations and audio
-      const merged: AyahWithTranslation[] = arabicData.ayahs.map((ayah, index) => ({
+      const merged: AyahWithExtra[] = arabicData.ayahs.map((ayah, index) => ({
         ...ayah,
         translation: translationData.ayahs[index]?.text || '',
-        audioUrl: audioData.ayahs[index]?.audio || '',
+        transliteration: transliterationData?.ayahs[index]?.text || '',
+        audioUrl: audioData.ayahs[index]?.audio || buildAudioUrl(reciterId, ayah.number),
       }));
 
-      setAyahsWithTranslation(merged);
+      setAyahs(merged);
     } catch (err) {
       console.error('[SurahDetails] Error fetching surah:', err);
       setError(err instanceof Error ? err.message : t('errors.generic'));
     } finally {
       setLoading(false);
     }
-  }, [surahNumber, t, i18n.language]);
+  }, [surahNumber, t, i18n.language, reciterId]);
 
   useEffect(() => {
     fetchSurahData();
   }, [fetchSurahData]);
 
-  // Cleanup audio on unmount
-  useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [sound]);
+  const buildFullPlaylist = (): AudioTrack[] => {
+    return ayahs.map((ayah) => ({
+      globalAyahNumber: ayah.number,
+      surahNumber: surahNumber!,
+      ayahNumberInSurah: ayah.numberInSurah,
+      audioUrl: ayah.audioUrl || buildAudioUrl(reciterId, ayah.number),
+    }));
+  };
 
-  const handlePlayAudio = async (ayahNumber: number, audioUrl?: string) => {
-    if (!audioUrl) {
-      Alert.alert(t('errors.generic'), t('errors.audioNotAvailable'));
+  const handlePlayAll = async () => {
+    if (playAllActive && isThisSurahPlaying) {
+      if (playbackState.isPlaying) {
+        await pause();
+      } else {
+        await resume();
+      }
       return;
     }
 
-    try {
-      // Stop current audio if playing
-      if (sound) {
-        await sound.unloadAsync();
-        setSound(null);
-        setPlayingAyahNumber(null);
-      }
-
-      // If same ayah, just stop
-      if (playingAyahNumber === ayahNumber) {
-        return;
-      }
-
-      // Configure audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
-      });
-
-      // Load and play new audio
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUrl },
-        { shouldPlay: true }
-      );
-
-      setSound(newSound);
-      setPlayingAyahNumber(ayahNumber);
-
-      // Handle playback status
-      newSound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          setPlayingAyahNumber(null);
-        }
-      });
-    } catch (err) {
-      console.error('[SurahDetails] Error playing audio:', err);
-      Alert.alert(t('errors.generic'), t('errors.audioPlaybackFailed'));
+    const playlist = buildFullPlaylist();
+    if (playlist.length > 0) {
+      setPlayAllActive(true);
+      await loadPlaylist(playlist, 0);
     }
   };
 
-  const handleShareAyah = async (ayah: AyahWithTranslation) => {
+  const handleStopAll = async () => {
+    setPlayAllActive(false);
+    await stop();
+  };
+
+  const handlePlayAyah = async (ayahIndex: number) => {
+    const ayah = ayahs[ayahIndex];
+    const currentTrack = playbackState.currentTrack;
+
+    if (currentTrack?.globalAyahNumber === ayah.number && playbackState.isPlaying) {
+      await pause();
+      return;
+    }
+    if (currentTrack?.globalAyahNumber === ayah.number && playbackState.isPaused) {
+      await resume();
+      return;
+    }
+
+    setPlayAllActive(false);
+    await playTrack({
+      globalAyahNumber: ayah.number,
+      surahNumber: surahNumber!,
+      ayahNumberInSurah: ayah.numberInSurah,
+      audioUrl: ayah.audioUrl || buildAudioUrl(reciterId, ayah.number),
+    });
+  };
+
+  const handleShareAyah = async (ayah: AyahWithExtra) => {
     try {
       const message = `${ayah.text}\n\n${ayah.translation}\n\n- ${surahData?.englishName} (${ayah.numberInSurah})`;
-
-      await Share.share({
-        message,
-      });
+      await Share.share({ message });
     } catch (err) {
-      console.error('[SurahDetails] Error sharing ayah:', err);
+      console.error('[SurahDetails] Error sharing:', err);
     }
   };
 
@@ -161,8 +220,8 @@ export default function SurahDetailsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error || t('errors.loadFailed')}</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>{t('common.retry')}</Text>
+          <TouchableOpacity onPress={fetchSurahData} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -179,12 +238,18 @@ export default function SurahDetailsScreen() {
           <Image source={backIcon} style={styles.headerIcon} resizeMode="contain" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{englishName}</Text>
-        <TouchableOpacity>
-          <Image source={shareIcon} style={styles.headerIcon} resizeMode="contain" />
+        <TouchableOpacity onPress={() => router.push('/settings' as any)}>
+          <Ionicons name="settings-outline" size={22} color={COLORS.white} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {/* Surah Card */}
         <View style={styles.surahCard}>
           <Text style={styles.surahName}>{englishName}</Text>
@@ -194,49 +259,86 @@ export default function SurahDetailsScreen() {
             {t(`quran.${revelationType.toLowerCase()}`)} • {numberOfAyahs} {t('common.verses')}
           </Text>
           <Text style={styles.bismillah}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+
+          {playAllActive && isThisSurahPlaying ? (
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={[styles.playAllBtn, { backgroundColor: COLORS.whiteAlpha15 }]}
+                onPress={playbackState.isPlaying ? pause : resume}
+              >
+                <Ionicons
+                  name={playbackState.isPlaying ? 'pause' : 'play'}
+                  size={18}
+                  color={COLORS.white}
+                />
+                <Text style={[styles.playAllText, { color: COLORS.white }]}>
+                  {playbackState.isPlaying ? 'Pause' : t('quran.playAll')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.stopBtn} onPress={handleStopAll}>
+                <Ionicons name="stop" size={18} color={COLORS.error} />
+                <Text style={[styles.playAllText, { color: COLORS.error }]}>
+                  {t('audio.stopAudio')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.playAllBtnFull} onPress={handlePlayAll}>
+              <Ionicons name="play" size={18} color={COLORS.primary} />
+              <Text style={styles.playAllText}>{t('quran.playAll')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Ayahs */}
-        {ayahsWithTranslation.map((ayah) => (
-          <View key={ayah.number} style={styles.ayahContainer}>
-            <View style={styles.ayahHeader}>
-              <View style={styles.ayahNumberContainer}>
-                <Image source={numberBg} style={styles.ayahNumberBg} resizeMode="contain" />
-                <Text style={styles.ayahNumberText}>{ayah.numberInSurah}</Text>
+        {ayahs.map((ayah, index) => {
+          const isPlayingThis = playbackState.currentTrack?.globalAyahNumber === ayah.number;
+
+          return (
+            <View
+              key={ayah.number}
+              ref={(ref) => { ayahRefs.current[ayah.number] = ref; }}
+              style={[styles.ayahContainer, isPlayingThis && styles.ayahContainerActive]}
+            >
+              <View style={styles.ayahHeader}>
+                <View style={styles.ayahNumberContainer}>
+                  <Image source={numberBg} style={styles.ayahNumberBg} resizeMode="contain" />
+                  <Text style={styles.ayahNumberText}>{ayah.numberInSurah}</Text>
+                </View>
+                <View style={styles.ayahActions}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleShareAyah(ayah)}
+                  >
+                    <Image source={shareIcon} style={styles.actionIcon} resizeMode="contain" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, isPlayingThis && styles.actionButtonActive]}
+                    onPress={() => handlePlayAyah(index)}
+                  >
+                    <Ionicons
+                      name={isPlayingThis && playbackState.isPlaying ? 'pause' : 'play'}
+                      size={18}
+                      color={isPlayingThis ? COLORS.primary : COLORS.gold}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.ayahActions}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleShareAyah(ayah)}
-                >
-                  <Image source={shareIcon} style={styles.actionIcon} resizeMode="contain" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.actionButton,
-                    playingAyahNumber === ayah.number && styles.actionButtonActive
-                  ]}
-                  onPress={() => handlePlayAudio(ayah.number, ayah.audioUrl)}
-                >
-                  <Image
-                    source={playIcon}
-                    style={[
-                      styles.actionIcon,
-                      playingAyahNumber === ayah.number && styles.actionIconActive
-                    ]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
+
+              {displayOptions.showArabic && (
+                <Text style={styles.ayahArabic}>{ayah.text}</Text>
+              )}
+
+              {displayOptions.showTransliteration && ayah.transliteration ? (
+                <Text style={styles.ayahTransliteration}>{ayah.transliteration}</Text>
+              ) : null}
+
+              {displayOptions.showTranslation && ayah.translation ? (
+                <Text style={styles.ayahTranslation}>{ayah.translation}</Text>
+              ) : null}
             </View>
-
-            <Text style={styles.ayahArabic}>{ayah.text}</Text>
-
-            {ayah.translation && (
-              <Text style={styles.ayahTranslation}>{ayah.translation}</Text>
-            )}
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -305,6 +407,47 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: FONTS.arabic,
     textAlign: 'center',
+    marginBottom: SPACING.xl,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    width: '100%',
+  },
+  playAllBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.gold,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  playAllBtnFull: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.gold,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    width: '100%',
+  },
+  stopBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.whiteAlpha15,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  playAllText: {
+    color: COLORS.primary,
+    fontFamily: FONTS.semiBold,
+    fontSize: 14,
   },
   ayahContainer: {
     marginHorizontal: SPACING['2xl'],
@@ -314,6 +457,10 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  ayahContainerActive: {
+    borderColor: COLORS.gold,
+    backgroundColor: 'rgba(249, 189, 100, 0.08)',
   },
   ayahHeader: {
     flexDirection: 'row',
@@ -358,9 +505,6 @@ const styles = StyleSheet.create({
     height: 20,
     tintColor: COLORS.gold,
   },
-  actionIconActive: {
-    tintColor: COLORS.primary,
-  },
   ayahArabic: {
     color: COLORS.white,
     fontSize: 20,
@@ -368,6 +512,14 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     lineHeight: 36,
     marginBottom: SPACING.lg,
+  },
+  ayahTransliteration: {
+    color: COLORS.gold,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    fontStyle: 'italic',
+    lineHeight: 22,
+    marginBottom: SPACING.sm,
   },
   ayahTranslation: {
     color: COLORS.gray300,
@@ -388,13 +540,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: SPACING.xl,
   },
-  backButton: {
+  retryButton: {
     backgroundColor: COLORS.gold,
     paddingHorizontal: SPACING['2xl'],
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.md,
   },
-  backButtonText: {
+  retryButtonText: {
     color: COLORS.primary,
     fontFamily: FONTS.semiBold,
   },

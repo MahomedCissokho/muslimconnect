@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -17,18 +16,14 @@ import quranImage from '../../assets/images/quran.png';
 import searchIcon from '../../assets/images/search-bar.png';
 import { HizbList, JuzList, PageList, SurahList } from '../../src/components';
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../../src/constants';
-import { useQuranMeta } from '../../src/hooks/useQuran';
+import { SURAHS, TOTAL_AYAHS, TOTAL_SURAHS } from '../../src/data';
 
 type TabType = 'surah' | 'page' | 'juzz' | 'hizb';
 
 export default function QuranScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { data, loading, error, refetch } = useQuranMeta();
   const [activeTab, setActiveTab] = useState<TabType>('surah');
-
-  console.log('[QuranScreen] Current activeTab:', activeTab);
-  console.log('[QuranScreen] activeTab type:', typeof activeTab);
 
   const tabs: { key: TabType; label: string }[] = [
     { key: 'surah', label: t('quran.surah') },
@@ -37,35 +32,26 @@ export default function QuranScreen() {
     { key: 'hizb', label: t('quran.hizb') },
   ];
 
-  console.log('[QuranScreen] Tabs array:', tabs);
-
   const handleSurahPress = (surahNumber: number) => {
-    console.log('[QuranScreen] Surah pressed:', surahNumber);
     router.push(`/surah/${surahNumber}` as any);
   };
 
   const handleJuzPress = (juzNumber: number) => {
-    console.log('[QuranScreen] Juz pressed:', juzNumber);
     // Navigation vers le juz
   };
 
   const handlePagePress = (pageNumber: number) => {
-    console.log('[QuranScreen] Page pressed:', pageNumber);
     // Navigation vers la page
   };
 
   const handleHizbPress = (hizbNumber: number) => {
-    console.log('[QuranScreen] Hizb pressed:', hizbNumber);
     // Navigation vers le hizb
   };
 
   const renderContent = () => {
-    console.log('[QuranScreen] renderContent called with activeTab:', activeTab);
     switch (activeTab) {
       case 'surah':
-        return data?.surahs.references ? (
-          <SurahList surahs={data.surahs.references} onSurahPress={handleSurahPress} />
-        ) : null;
+        return <SurahList surahs={SURAHS} onSurahPress={handleSurahPress} />;
       case 'juzz':
         return <JuzList onJuzPress={handleJuzPress} />;
       case 'page':
@@ -77,36 +63,12 @@ export default function QuranScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={COLORS.gold} />
-          <Text style={styles.loadingText}>{t('quran.loading')}</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity onPress={refetch} style={styles.retryButton}>
-            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/settings' as any)}>
             <Image source={menuIcon} style={styles.headerIcon} resizeMode="contain" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('common.appName')}</Text>
@@ -147,24 +109,11 @@ export default function QuranScreen() {
             const buttonStyle = isActive ? styles.activeTab : styles.inactiveTab;
             const textStyle = isActive ? styles.activeTabText : styles.inactiveTabText;
 
-            console.log(`[QuranScreen] Rendering tab "${tab.key}":`, {
-              isActive,
-              activeTab,
-              tabKey: tab.key,
-              comparison: activeTab === tab.key,
-              buttonStyle,
-              textStyle,
-              showIndicator: isActive
-            });
-
             return (
               <TouchableOpacity
                 key={tab.key}
                 style={buttonStyle}
-                onPress={() => {
-                  console.log('[QuranScreen] Tab pressed:', tab.key);
-                  setActiveTab(tab.key);
-                }}
+                onPress={() => setActiveTab(tab.key)}
               >
                 <Text style={textStyle}>
                   {tab.label}
@@ -179,10 +128,10 @@ export default function QuranScreen() {
         {renderContent()}
 
         {/* Footer */}
-        {data && activeTab === 'surah' && (
+        {activeTab === 'surah' && (
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              {t('common.total')}: {data.surahs.count} {t('common.surahs')} • {data.ayahs.count} {t('common.verses')}
+              {t('common.total')}: {TOTAL_SURAHS} {t('common.surahs')} • {TOTAL_AYAHS} {t('common.verses')}
             </Text>
           </View>
         )}
@@ -195,33 +144,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.primary,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING['3xl'],
-  },
-  loadingText: {
-    color: COLORS.white,
-    marginTop: SPACING.lg,
-    fontFamily: FONTS.medium,
-  },
-  errorText: {
-    color: COLORS.error,
-    textAlign: 'center',
-    marginBottom: SPACING.lg,
-    fontFamily: FONTS.regular,
-  },
-  retryButton: {
-    backgroundColor: COLORS.gold,
-    paddingHorizontal: SPACING['2xl'],
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.md,
-  },
-  retryButtonText: {
-    color: COLORS.primary,
-    fontFamily: FONTS.semiBold,
   },
   header: {
     flexDirection: 'row',
@@ -357,15 +279,6 @@ const styles = StyleSheet.create({
     marginRight: SPACING.lg,
   },
   inactiveTabText: {
-    color: COLORS.gray400,
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-  },
-  comingSoonContainer: {
-    paddingVertical: SPACING['3xl'],
-    alignItems: 'center',
-  },
-  comingSoonText: {
     color: COLORS.gray400,
     fontSize: 16,
     fontFamily: FONTS.medium,

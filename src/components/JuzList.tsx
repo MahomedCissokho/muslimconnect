@@ -4,8 +4,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import numberBg from '../../assets/images/number.png';
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../constants';
-import { useJuzList } from '../hooks/useQuran';
-import { SkeletonLoader } from './SkeletonLoader';
+import { JUZ_LIST, getSurahName } from '../data';
 
 interface JuzListProps {
   onJuzPress?: (juzNumber: number) => void;
@@ -13,23 +12,10 @@ interface JuzListProps {
 
 export const JuzList: React.FC<JuzListProps> = ({ onJuzPress }) => {
   const { t } = useTranslation();
-  const { data: juzList, loading, error } = useJuzList();
-
-  if (loading) {
-    return <SkeletonLoader itemCount={10} />;
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      {juzList.map((juz) => (
+      {JUZ_LIST.map((juz) => (
         <TouchableOpacity
           key={juz.number}
           style={styles.juzItem}
@@ -46,7 +32,7 @@ export const JuzList: React.FC<JuzListProps> = ({ onJuzPress }) => {
               <Text style={styles.juzName}>{t('quran.juzz')} {juz.number}</Text>
               <View style={styles.detailsContainer}>
                 <View style={styles.surahRange}>
-                  <Text style={styles.surahName}>{juz.startSurah}</Text>
+                  <Text style={styles.surahName}>{getSurahName(juz.startSurah)}</Text>
                   <Text style={styles.ayahNumber}>{t('quran.verse')} {juz.startAyah}</Text>
                 </View>
                 <View style={styles.separator}>
@@ -55,7 +41,7 @@ export const JuzList: React.FC<JuzListProps> = ({ onJuzPress }) => {
                   <View style={styles.separatorLine} />
                 </View>
                 <View style={styles.surahRange}>
-                  <Text style={styles.surahName}>{juz.endSurah}</Text>
+                  <Text style={styles.surahName}>{getSurahName(juz.endSurah)}</Text>
                   <Text style={styles.ayahNumber}>{t('quran.verse')} {juz.endAyah}</Text>
                 </View>
               </View>
@@ -70,17 +56,6 @@ export const JuzList: React.FC<JuzListProps> = ({ onJuzPress }) => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: SPACING.lg,
-  },
-  errorContainer: {
-    padding: SPACING.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  errorText: {
-    color: COLORS.error,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    textAlign: 'center',
   },
   juzItem: {
     flexDirection: 'row',

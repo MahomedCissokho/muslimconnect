@@ -5,16 +5,7 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-// Quran Types
-export interface Surah {
-  number: number;
-  name: string;
-  englishName: string;
-  englishNameTranslation: string;
-  numberOfAyahs: number;
-  revelationType: string;
-}
-
+// Ayah type (returned by API when fetching verse content)
 export interface Ayah {
   number: number;
   text: string;
@@ -34,16 +25,7 @@ export interface Ayah {
   audioSecondary?: string[];
 }
 
-export interface QuranMeta {
-  ayahs: {
-    count: number;
-  };
-  surahs: {
-    count: number;
-    references: Surah[];
-  };
-}
-
+// API content types (for fetching actual verses/audio)
 export interface SurahData {
   number: number;
   name: string;
@@ -77,28 +59,6 @@ export interface JuzData {
   };
 }
 
-// Type pour la liste des Juz
-export interface JuzListItem {
-  number: number;
-  startSurah: string;
-  startAyah: number;
-  endSurah: string;
-  endAyah: number;
-}
-
-// Type pour la liste des Pages
-export interface PageListItem {
-  number: number;
-  startSurah: number;  // Numéro de la sourate
-  startSurahName: string;  // Nom de la sourate
-  startAyah: number;
-  endSurah: number;
-  endSurahName: string;
-  endAyah: number;
-  juz: number;
-}
-
-// Type pour les données de Page depuis l'API
 export interface PageData {
   number: number;
   ayahs: Ayah[];
@@ -122,19 +82,6 @@ export interface PageData {
   };
 }
 
-// Type pour la liste des Hizb
-export interface HizbListItem {
-  hizbQuarter: number; // 1-240 (numéro du quart de Hizb)
-  startSurah: number;  // Numéro de la sourate
-  startSurahName: string;  // Nom de la sourate
-  startAyah: number;
-  endSurah: number;
-  endSurahName: string;
-  endAyah: number;
-  juz: number;
-}
-
-// Type pour les données de Hizb depuis l'API
 export interface HizbData {
   number: number;
   ayahs: Ayah[];
@@ -240,24 +187,3 @@ export type TabParamList = {
   qibla: undefined;
   profile: undefined;
 };
-
-// Hook Return Types
-export interface UseQuranMetaReturn {
-  data: QuranMeta | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}
-
-export interface UseSurahReturn {
-  data: SurahData | null;
-  loading: boolean;
-  error: string | null;
-}
-
-export interface UsePrayerTimesReturn {
-  data: PrayerData | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-}

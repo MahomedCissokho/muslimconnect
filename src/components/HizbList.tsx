@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import numberBg from '../../assets/images/number.png';
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../constants';
-import { useHizbList } from '../hooks/useQuran';
-import { SkeletonLoader } from './SkeletonLoader';
+import { getSurahName } from '../data';
+import { HIZB_QUARTERS } from '../data/hizb';
 
 interface HizbListProps {
   onHizbPress?: (hizbQuarter: number) => void;
@@ -13,62 +13,25 @@ interface HizbListProps {
 
 export const HizbList: React.FC<HizbListProps> = ({ onHizbPress }) => {
   const { t } = useTranslation();
-  const { data: hizbList, loading, error } = useHizbList();
-
-  useEffect(() => {
-    console.log('[HizbList] Component mounted');
-    console.log('[HizbList] Hizb quarters count:', hizbList.length);
-  }, [hizbList]);
-
-  const handleHizbPress = (hizbQuarter: number) => {
-    console.log('[HizbList] Hizb quarter pressed:', hizbQuarter);
-    onHizbPress?.(hizbQuarter);
-  };
-
-  if (loading) {
-    return <SkeletonLoader itemCount={10} />;
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      {hizbList.map((hizb) => (
+      {HIZB_QUARTERS.map((hizb) => (
         <TouchableOpacity
-          key={hizb.hizbQuarter}
+          key={hizb.quarter}
           style={styles.hizbItem}
-          onPress={() => handleHizbPress(hizb.hizbQuarter)}
+          onPress={() => onHizbPress?.(hizb.quarter)}
           activeOpacity={0.7}
         >
           <View style={styles.hizbLeft}>
             <View style={styles.numberContainer}>
               <Image source={numberBg} style={styles.numberBg} resizeMode="contain" />
-              <Text style={styles.numberText}>{hizb.hizbQuarter}</Text>
+              <Text style={styles.numberText}>{hizb.quarter}</Text>
             </View>
 
             <View style={styles.hizbInfo}>
-              <Text style={styles.hizbName}>{t('quran.hizb')} {hizb.hizbQuarter}</Text>
-              <View style={styles.detailsContainer}>
-                <View style={styles.surahRange}>
-                  <Text style={styles.surahName}>{hizb.startSurahName}</Text>
-                  <Text style={styles.ayahNumber}>{t('quran.verse')} {hizb.startAyah}</Text>
-                </View>
-                <View style={styles.separator}>
-                  <View style={styles.separatorLine} />
-                  <View style={styles.separatorDot} />
-                  <View style={styles.separatorLine} />
-                </View>
-                <View style={styles.surahRange}>
-                  <Text style={styles.surahName}>{hizb.endSurahName}</Text>
-                  <Text style={styles.ayahNumber}>{t('quran.verse')} {hizb.endAyah}</Text>
-                </View>
-              </View>
+              <Text style={styles.hizbName}>{t('quran.hizb')} {hizb.hizb} - Q{((hizb.quarter - 1) % 4) + 1}</Text>
+              <Text style={styles.surahName}>{getSurahName(hizb.startSurah)} - {t('quran.verse')} {hizb.startAyah}</Text>
             </View>
           </View>
 
@@ -84,17 +47,6 @@ export const HizbList: React.FC<HizbListProps> = ({ onHizbPress }) => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: SPACING.lg,
-  },
-  errorContainer: {
-    padding: SPACING.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  errorText: {
-    color: COLORS.error,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    textAlign: 'center',
   },
   hizbItem: {
     flexDirection: 'row',
@@ -136,41 +88,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: SPACING.sm,
   },
-  detailsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  surahRange: {
-    flexDirection: 'column',
-  },
   surahName: {
     color: COLORS.gray300,
     fontSize: 13,
     fontFamily: FONTS.medium,
-  },
-  ayahNumber: {
-    color: COLORS.gold,
-    fontSize: 11,
-    fontFamily: FONTS.regular,
-    marginTop: 2,
-  },
-  separator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: SPACING.md,
-    width: 40,
-  },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.gray600,
-  },
-  separatorDot: {
-    width: 6,
-    height: 6,
-    borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.gold,
-    marginHorizontal: 3,
   },
   juzBadge: {
     backgroundColor: COLORS.whiteAlpha15,

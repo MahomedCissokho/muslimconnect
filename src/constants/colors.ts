@@ -5,6 +5,7 @@ export const COLORS = {
   // Couleurs principales
   primary: '#040C23',
   secondary: '#121A3A',
+  tertiary: '#121931',
   
   // Accent
   gold: '#F9BD64',

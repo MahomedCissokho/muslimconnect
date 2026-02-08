@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import numberBg from '../../assets/images/number.png';
 import { COLORS, FONTS, SPACING } from '../constants';
-import { usePageList } from '../hooks/useQuran';
-import { SkeletonLoader } from './SkeletonLoader';
+import { getSurahName } from '../data';
+import { PAGES } from '../data/pages';
 
 interface PageListProps {
   onPagePress?: (pageNumber: number) => void;
@@ -13,37 +13,14 @@ interface PageListProps {
 
 export const PageList: React.FC<PageListProps> = ({ onPagePress }) => {
   const { t } = useTranslation();
-  const { data: pageList, loading, error } = usePageList();
-
-  useEffect(() => {
-    console.log('[PageList] Component mounted');
-    console.log('[PageList] Pages count:', pageList.length);
-  }, [pageList]);
-
-  const handlePagePress = (pageNumber: number) => {
-    console.log('[PageList] Page pressed:', pageNumber);
-    onPagePress?.(pageNumber);
-  };
-
-  if (loading) {
-    return <SkeletonLoader itemCount={10} />;
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
-      {pageList.map((page) => (
+      {PAGES.map((page) => (
         <TouchableOpacity
           key={page.number}
           style={styles.pageItem}
-          onPress={() => handlePagePress(page.number)}
+          onPress={() => onPagePress?.(page.number)}
           activeOpacity={0.7}
         >
           <View style={styles.pageLeft}>
@@ -54,21 +31,7 @@ export const PageList: React.FC<PageListProps> = ({ onPagePress }) => {
 
             <View style={styles.pageInfo}>
               <Text style={styles.pageName}>{t('quran.page')} {page.number}</Text>
-              <View style={styles.detailsContainer}>
-                <View style={styles.surahRange}>
-                  <Text style={styles.surahName}>{page.startSurahName}</Text>
-                  <Text style={styles.ayahNumber}>{t('quran.verse')} {page.startAyah}</Text>
-                </View>
-                <View style={styles.separator}>
-                  <View style={styles.separatorLine} />
-                  <View style={styles.separatorDot} />
-                  <View style={styles.separatorLine} />
-                </View>
-                <View style={styles.surahRange}>
-                  <Text style={styles.surahName}>{page.endSurahName}</Text>
-                  <Text style={styles.ayahNumber}>{t('quran.verse')} {page.endAyah}</Text>
-                </View>
-              </View>
+              <Text style={styles.surahName}>{getSurahName(page.startSurah)} - {t('quran.verse')} {page.startAyah}</Text>
             </View>
           </View>
 
@@ -84,17 +47,6 @@ export const PageList: React.FC<PageListProps> = ({ onPagePress }) => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: SPACING.lg,
-  },
-  errorContainer: {
-    padding: SPACING.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  errorText: {
-    color: COLORS.error,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    textAlign: 'center',
   },
   pageItem: {
     flexDirection: 'row',
@@ -136,41 +88,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: SPACING.sm,
   },
-  detailsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  surahRange: {
-    flexDirection: 'column',
-  },
   surahName: {
     color: COLORS.gray300,
     fontSize: 13,
     fontFamily: FONTS.medium,
-  },
-  ayahNumber: {
-    color: COLORS.gold,
-    fontSize: 11,
-    fontFamily: FONTS.regular,
-    marginTop: 2,
-  },
-  separator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: SPACING.md,
-    width: 40,
-  },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.gray600,
-  },
-  separatorDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.gold,
-    marginHorizontal: 3,
   },
   juzBadge: {
     backgroundColor: COLORS.whiteAlpha15,
