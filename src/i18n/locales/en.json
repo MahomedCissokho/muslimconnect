@@ -36,10 +36,55 @@
     "starts": "Starts",
     "ends": "Ends",
     "meccan": "MECCAN",
-    "medinan": "MEDINAN"
+    "medinan": "MEDINAN",
+    "playAll": "Play All",
+    "download": "Download",
+    "downloading": "Downloading...",
+    "downloaded": "Downloaded",
+    "deleteAudio": "Delete audio"
+  },
+  "audio": {
+    "selectReciter": "Select Reciter",
+    "murattal": "Murattal",
+    "mujawwad": "Mujawwad",
+    "nowPlaying": "Now Playing",
+    "playAyah": "Play verse",
+    "stopAudio": "Stop"
+  },
+  "settings": {
+    "title": "Settings",
+    "display": "Display",
+    "showArabic": "Arabic Text",
+    "showTransliteration": "Transliteration",
+    "showTranslation": "Translation",
+    "audio": "Audio",
+    "reciter": "Reciter",
+    "language": "Language",
+    "about": "About",
+    "version": "Version",
+    "storage": "Audio Storage"
   },
   "prayer": {
-    "title": "Prayer Times"
+    "title": "Prayer Times",
+    "loading": "Fetching prayer times...",
+    "fajr": "Fajr",
+    "sunrise": "Sunrise",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Next Prayer",
+    "next": "Next",
+    "todaySchedule": "Today's Schedule",
+    "qibla": "Qibla Direction",
+    "qiblaBearing": "Bearing",
+    "compassUnavailable": "Compass sensor not available on this device",
+    "qiblaAligned": "Qibla Found!",
+    "turnToQibla": "Turn to find Qibla",
+    "locationRequired": "Location Required",
+    "enableLocation": "Please enable location services to get accurate prayer times for your area.",
+    "fetchError": "Unable to Load",
+    "tryAgain": "Could not fetch prayer times. Please check your connection and try again."
   },
   "hadith": {
     "title": "Hadith"

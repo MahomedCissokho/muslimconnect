@@ -36,10 +36,55 @@
     "starts": "Début",
     "ends": "Fin",
     "meccan": "MECQUOISE",
-    "medinan": "MÉDINOISE"
+    "medinan": "MÉDINOISE",
+    "playAll": "Tout lire",
+    "download": "Télécharger",
+    "downloading": "Téléchargement...",
+    "downloaded": "Téléchargé",
+    "deleteAudio": "Supprimer l'audio"
+  },
+  "audio": {
+    "selectReciter": "Choisir un récitateur",
+    "murattal": "Murattal",
+    "mujawwad": "Mujawwad",
+    "nowPlaying": "En cours de lecture",
+    "playAyah": "Lire le verset",
+    "stopAudio": "Arrêter"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "display": "Affichage",
+    "showArabic": "Texte arabe",
+    "showTransliteration": "Translittération",
+    "showTranslation": "Traduction",
+    "audio": "Audio",
+    "reciter": "Récitateur",
+    "language": "Langue",
+    "about": "À propos",
+    "version": "Version",
+    "storage": "Stockage audio"
   },
   "prayer": {
-    "title": "Horaires de Prière"
+    "title": "Horaires de Prière",
+    "loading": "Chargement des horaires...",
+    "fajr": "Fajr",
+    "sunrise": "Lever du soleil",
+    "dhuhr": "Dhuhr",
+    "asr": "Asr",
+    "maghrib": "Maghrib",
+    "isha": "Isha",
+    "nextPrayer": "Prochaine Prière",
+    "next": "Suivant",
+    "todaySchedule": "Horaires du jour",
+    "qibla": "Direction de la Qibla",
+    "qiblaBearing": "Direction",
+    "compassUnavailable": "Capteur de boussole non disponible sur cet appareil",
+    "qiblaAligned": "Qibla trouvée !",
+    "turnToQibla": "Tournez pour trouver la Qibla",
+    "locationRequired": "Localisation requise",
+    "enableLocation": "Veuillez activer les services de localisation pour obtenir les horaires de prière précis pour votre zone.",
+    "fetchError": "Chargement impossible",
+    "tryAgain": "Impossible de récupérer les horaires de prière. Veuillez vérifier votre connexion et réessayer."
   },
   "hadith": {
     "title": "Hadiths"

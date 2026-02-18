@@ -12,6 +12,7 @@ const COLORS = {
   gold: '#F9BD64',
   grayInactive: '#6B7280',
   border: '#1F2937',
+  tertiary: '#121931',
 };
 
 interface TabIconProps {
@@ -38,7 +39,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.primary,
+          backgroundColor: COLORS.tertiary,
           borderTopWidth: 1,
           borderTopColor: COLORS.border,
           height: 70,
