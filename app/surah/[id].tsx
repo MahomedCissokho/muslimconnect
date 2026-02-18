@@ -1,11 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Dimensions,
   FlatList,
   Image,
-  InteractionManager,
   Share,
   StyleSheet,
   Text,
@@ -21,7 +27,10 @@ import { LoadingIndicator } from "../../src/components";
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAudio } from "../../src/contexts/AudioContext";
 import { useSettings } from "../../src/contexts/SettingsContext";
-import type { AudioTrack } from "../../src/services/audio";
+import type { AudioOrigin, AudioTrack } from "../../src/services/audio";
+import type { AyahBookmark } from "../../src/services/bookmarks";
+import { bookmarkService } from "../../src/services/bookmarks";
+import { lastReadService } from "../../src/services/lastRead";
 import { quranService } from "../../src/services/quran";
 import type { Ayah, SurahData } from "../../src/types";
 import { buildAudioUrl } from "../../src/utils/audioUrl";
@@ -32,11 +41,42 @@ interface AyahWithExtra extends Ayah {
   audioUrl?: string;
 }
 
+const ESTIMATED_ITEM_HEIGHT = 200;
+
 export default function SurahDetailsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const {
+    id,
+    fromAyah: fromParam,
+    toAyah: toParam,
+    autoPlay: autoPlayParam,
+    originType: originTypeParam,
+    originId: originIdParam,
+  } = useLocalSearchParams<{
+    id: string;
+    fromAyah?: string;
+    toAyah?: string;
+    autoPlay?: string;
+    originType?: string;
+    originId?: string;
+  }>();
   const surahNumber = id ? parseInt(id, 10) : null;
+  const rangeFrom = fromParam ? parseInt(fromParam, 10) : null;
+  const rangeTo = toParam ? parseInt(toParam, 10) : null;
+  const isRangeMode = rangeFrom !== null;
+  const shouldAutoPlay = autoPlayParam === "1";
+
+  // Build a typed origin object from URL params (used to tag each AudioTrack so
+  // the mini-player knows where to navigate back)
+  const audioOrigin: AudioOrigin = useMemo(() => {
+    const ot = originTypeParam as AudioOrigin["type"] | undefined;
+    const oid = originIdParam ? parseInt(originIdParam, 10) : NaN;
+    if (ot && (ot === "juz" || ot === "hizb" || ot === "page") && !isNaN(oid)) {
+      return { type: ot, id: oid };
+    }
+    return { type: "surah" as const, id: surahNumber ?? 1 };
+  }, [originTypeParam, originIdParam, surahNumber]);
 
   const { reciterId, displayOptions } = useSettings();
   const { playbackState, loadPlaylist, playTrack, pause, resume, stop } =
@@ -47,15 +87,30 @@ export default function SurahDetailsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playAllActive, setPlayAllActive] = useState(false);
+  const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<string>>(
+    new Set(),
+  );
 
   const flatListRef = useRef<FlatList<AyahWithExtra>>(null);
   const lastScrolledAyah = useRef<number | null>(null);
+  const itemHeights = useRef<Map<number, number>>(new Map());
+  const headerHeight = useRef<number>(300); // estimated, updated on layout
 
   const isThisSurahPlaying =
     playbackState.currentTrack?.surahNumber === surahNumber &&
     (playbackState.isPlaying ||
       playbackState.isPaused ||
       playbackState.isLoading);
+
+  // Load bookmarked ayahs on mount
+  useEffect(() => {
+    bookmarkService.getAll().then((all) => {
+      const ids = new Set(
+        all.filter((b) => b.type === "ayah").map((b) => b.id),
+      );
+      setBookmarkedAyahs(ids);
+    });
+  }, []);
 
   // Reset playAllActive only when audio truly stops
   useEffect(() => {
@@ -65,46 +120,27 @@ export default function SurahDetailsScreen() {
   }, [playbackState.currentTrack, playbackState.isLoading]);
 
   // ============ AUTO-SCROLL ============
+  // Dépend UNIQUEMENT de currentTrack. Si on ajoute isPlaying/isLoading en deps,
+  // React cancel le setTimeout à chaque changement d'état audio → scroll jamais exécuté.
   useEffect(() => {
     const track = playbackState.currentTrack;
-    const globalNum = track?.globalAyahNumber;
-    const isSameSurah = track?.surahNumber === surahNumber;
+    if (!track || track.surahNumber !== surahNumber) return;
 
-    // Only scroll when actually playing (not during loading transition)
-    // This ensures FlatList has re-rendered with new extraData before we scroll
-    if (!globalNum || !isSameSurah || !playbackState.isPlaying) {
-      return;
-    }
+    const index = ayahs.findIndex((a) => a.number === track.globalAyahNumber);
+    if (index < 0) return;
 
-    if (globalNum === lastScrolledAyah.current) {
-      return;
-    }
-
-    const index = ayahs.findIndex((a) => a.number === globalNum);
-    if (index < 0 || !flatListRef.current) {
-      return;
-    }
-
-    lastScrolledAyah.current = globalNum;
-
-    // Wait for FlatList re-render + layout to settle, then scroll
-    const task = InteractionManager.runAfterInteractions(() => {
-      // Extra frame delay ensures the layout pass is complete
-      requestAnimationFrame(() => {
-        try {
-          flatListRef.current?.scrollToIndex({
-            index,
-            animated: true,
-            viewPosition: 0,
-          });
-        } catch (err) {
-          console.warn("[AutoScroll] scrollToIndex error:", err);
-        }
+    const id = setTimeout(() => {
+      flatListRef.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0.5, // 0 = haut, 0.5 = centré, 1 = bas
       });
-    });
+    }, 200);
 
-    return () => task.cancel();
-  }, [playbackState.currentTrack, playbackState.isPlaying, surahNumber, ayahs]);
+    // Le cleanup n'annule le timeout QUE si currentTrack change (nouveau ayah).
+    // C'est le bon comportement : on scroll vers le dernier ayah actif.
+    return () => clearTimeout(id);
+  }, [playbackState.currentTrack, surahNumber, ayahs]);
   // ============ END AUTO-SCROLL ============
 
   const onScrollToIndexFailed = useCallback(
@@ -113,16 +149,22 @@ export default function SurahDetailsScreen() {
       highestMeasuredFrameIndex: number;
       averageItemLength: number;
     }) => {
-      // Scroll to approximate offset first, then retry with exact index
-      const offset = info.averageItemLength * info.index;
-      flatListRef.current?.scrollToOffset({ offset, animated: false });
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
-          index: info.index,
-          animated: true,
-          viewPosition: 0,
-        });
-      }, 300);
+      // Fallback when item isn't rendered yet: manually approximate the offset
+      let offset = headerHeight.current;
+      for (let i = 0; i < info.index; i++) {
+        offset += itemHeights.current.get(i) ?? ESTIMATED_ITEM_HEIGHT;
+      }
+      const screenHeight = Dimensions.get("window").height;
+      const itemHeight =
+        itemHeights.current.get(info.index) ?? ESTIMATED_ITEM_HEIGHT;
+      const centeredOffset = Math.max(
+        0,
+        offset - screenHeight / 2 + itemHeight / 2,
+      );
+      flatListRef.current?.scrollToOffset({
+        offset: centeredOffset,
+        animated: true,
+      });
     },
     [],
   );
@@ -158,18 +200,83 @@ export default function SurahDetailsScreen() {
           buildAudioUrl(reciterId, ayah.number),
       }));
 
-      setAyahs(merged);
+      // Filter to the requested ayah range (from Juz/Hizb/Page navigation)
+      const filtered = isRangeMode
+        ? merged.filter((a) => {
+            const n = a.numberInSurah;
+            return n >= (rangeFrom ?? 1) && n <= (rangeTo ?? a.numberInSurah);
+          })
+        : merged;
+
+      setAyahs(filtered);
+
+      // Save as last read position
+      const firstAyah = filtered[0];
+      if (firstAyah) {
+        lastReadService
+          .set({
+            surahNumber: surahNumber,
+            ayahNumber: firstAyah.numberInSurah,
+            origin: isRangeMode ? "surah" : "surah",
+            juz: firstAyah.juz,
+            page: firstAyah.page,
+            hizb: Math.ceil(firstAyah.hizbQuarter / 4),
+          })
+          .catch(() => {});
+      }
     } catch (err) {
       console.error("[SurahDetails] Error fetching surah:", err);
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
     }
-  }, [surahNumber, t, i18n.language, reciterId]);
+  }, [
+    surahNumber,
+    t,
+    i18n.language,
+    reciterId,
+    isRangeMode,
+    rangeFrom,
+    rangeTo,
+  ]);
+
+  // Track whether we already fired autoPlay
+  const autoPlayFired = useRef(false);
 
   useEffect(() => {
     fetchSurahData();
   }, [fetchSurahData]);
+
+  // Auto-play when navigating from Juz/Hizb/Page with autoPlay=1
+  useEffect(() => {
+    if (
+      shouldAutoPlay &&
+      !autoPlayFired.current &&
+      ayahs.length > 0 &&
+      !loading
+    ) {
+      autoPlayFired.current = true;
+      const playlist = ayahs.map((ayah) => ({
+        globalAyahNumber: ayah.number,
+        surahNumber: surahNumber!,
+        ayahNumberInSurah: ayah.numberInSurah,
+        audioUrl: ayah.audioUrl || buildAudioUrl(reciterId, ayah.number),
+        origin: audioOrigin,
+      }));
+      if (playlist.length > 0) {
+        setPlayAllActive(true);
+        loadPlaylist(playlist, 0);
+      }
+    }
+  }, [
+    shouldAutoPlay,
+    ayahs,
+    loading,
+    surahNumber,
+    reciterId,
+    loadPlaylist,
+    audioOrigin,
+  ]);
 
   const buildFullPlaylist = (): AudioTrack[] => {
     return ayahs.map((ayah) => ({
@@ -177,6 +284,7 @@ export default function SurahDetailsScreen() {
       surahNumber: surahNumber!,
       ayahNumberInSurah: ayah.numberInSurah,
       audioUrl: ayah.audioUrl || buildAudioUrl(reciterId, ayah.number),
+      origin: audioOrigin,
     }));
   };
 
@@ -228,7 +336,20 @@ export default function SurahDetailsScreen() {
       surahNumber: surahNumber!,
       ayahNumberInSurah: ayah.numberInSurah,
       audioUrl: ayah.audioUrl || buildAudioUrl(reciterId, ayah.number),
+      origin: { type: "surah", id: surahNumber! },
     });
+
+    // Update last read to the ayah being played
+    lastReadService
+      .set({
+        surahNumber: surahNumber!,
+        ayahNumber: ayah.numberInSurah,
+        origin: "surah",
+        juz: ayah.juz,
+        page: ayah.page,
+        hizb: Math.ceil(ayah.hizbQuarter / 4),
+      })
+      .catch(() => {});
   };
 
   const handleShareAyah = async (ayah: AyahWithExtra) => {
@@ -239,6 +360,33 @@ export default function SurahDetailsScreen() {
       console.error("[SurahDetails] Error sharing:", err);
     }
   };
+
+  const handleBookmarkAyah = useCallback(
+    async (ayah: AyahWithExtra) => {
+      const id = `ayah_${surahNumber}_${ayah.numberInSurah}`;
+      const bm: AyahBookmark = {
+        type: "ayah",
+        id,
+        surahNumber: surahNumber!,
+        surahName: surahData?.englishName ?? "",
+        surahNameAr: surahData?.name ?? "",
+        ayahNumberInSurah: ayah.numberInSurah,
+        globalAyahNumber: ayah.number,
+        textAr: ayah.text,
+        transliteration: ayah.transliteration,
+        translationFr: ayah.translation,
+        savedAt: new Date().toISOString(),
+      };
+      const added = await bookmarkService.toggle(bm);
+      setBookmarkedAyahs((prev) => {
+        const next = new Set(prev);
+        if (added) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    },
+    [surahNumber, surahData],
+  );
 
   if (loading) {
     return (
@@ -287,25 +435,37 @@ export default function SurahDetailsScreen() {
         ref={flatListRef}
         data={ayahs}
         keyExtractor={(item) => String(item.number)}
-        extraData={playbackState.currentTrack?.globalAyahNumber}
+        extraData={{
+          currentTrack: playbackState.currentTrack?.globalAyahNumber,
+          bookmarkedAyahs,
+        }}
         showsVerticalScrollIndicator={false}
         style={styles.flatList}
         windowSize={11}
         onScrollToIndexFailed={onScrollToIndexFailed}
         ListHeaderComponent={
-          <View style={styles.surahCard}>
+          <View
+            style={styles.surahCard}
+            onLayout={(e) => {
+              headerHeight.current = e.nativeEvent.layout.height;
+            }}
+          >
             <Text style={styles.surahName}>{englishName}</Text>
             <Text style={styles.surahTranslation}>
               {englishNameTranslation}
             </Text>
             <View style={styles.divider} />
             <Text style={styles.surahInfo}>
-              {t(`quran.${revelationType.toLowerCase()}`)} • {numberOfAyahs}{" "}
-              {t("common.verses")}
+              {t(`quran.${revelationType.toLowerCase()}`)} •{" "}
+              {isRangeMode
+                ? `${t("quran.verse")} ${rangeFrom}${rangeTo ? ` → ${rangeTo}` : ` → ${numberOfAyahs}`}  (${ayahs.length} ${t("common.verses")})`
+                : `${numberOfAyahs} ${t("common.verses")}`}
             </Text>
-            <Text style={styles.bismillah}>
-              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-            </Text>
+            {!isRangeMode && (
+              <Text style={styles.bismillah}>
+                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              </Text>
+            )}
 
             {playAllActive && isThisSurahPlaying ? (
               <View style={styles.cardActions}>
@@ -349,6 +509,8 @@ export default function SurahDetailsScreen() {
         renderItem={({ item: ayah, index }) => {
           const isPlayingThis =
             playbackState.currentTrack?.globalAyahNumber === ayah.number;
+          const bmId = `ayah_${surahNumber}_${ayah.numberInSurah}`;
+          const isBookmarked = bookmarkedAyahs.has(bmId);
 
           return (
             <View
@@ -357,6 +519,9 @@ export default function SurahDetailsScreen() {
                 isPlayingThis && styles.ayahContainerActive,
               ]}
               collapsable={false}
+              onLayout={(e) => {
+                itemHeights.current.set(index, e.nativeEvent.layout.height);
+              }}
             >
               <View style={styles.ayahHeader}>
                 <View style={styles.ayahNumberContainer}>
@@ -378,6 +543,19 @@ export default function SurahDetailsScreen() {
                       source={shareIcon}
                       style={styles.actionIcon}
                       resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.actionButton,
+                      isBookmarked && styles.actionButtonActive,
+                    ]}
+                    onPress={() => handleBookmarkAyah(ayah)}
+                  >
+                    <Ionicons
+                      name={isBookmarked ? "bookmark" : "bookmark-outline"}
+                      size={18}
+                      color={isBookmarked ? COLORS.primary : COLORS.gold}
                     />
                   </TouchableOpacity>
                   <TouchableOpacity

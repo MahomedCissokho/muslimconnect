@@ -1,12 +1,21 @@
 import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
 import type { AudioPlayer as ExpoAudioPlayer } from "expo-audio/build/AudioModule.types";
 
+export type AudioOriginType = "surah" | "juz" | "hizb" | "page";
+
+export interface AudioOrigin {
+  type: AudioOriginType;
+  id: number;
+}
+
 export interface AudioTrack {
   globalAyahNumber: number;
   surahNumber: number;
   ayahNumberInSurah: number;
   audioUrl: string;
   localUri?: string;
+  /** Where the playback originates — used to navigate back from the mini-player */
+  origin?: AudioOrigin;
 }
 
 export interface PlaybackState {

@@ -164,7 +164,7 @@ export interface User {
   name: string;
   email: string;
   preferences: {
-    language: 'fr' | 'ar' | 'en';
+    language: "fr" | "ar" | "en";
     notifications: boolean;
     prayerReminders: boolean;
     lastReadSurah?: number;
@@ -178,8 +178,20 @@ export interface User {
 export type RootStackParamList = {
   index: undefined;
   onboarding: undefined;
-  '(tabs)': undefined;
+  "(tabs)": undefined;
 };
+
+// Quran Group Types (Juz/Hizb/Page detail screens)
+export interface SurahInGroup {
+  number: number;
+  name: string;
+  englishName: string;
+  transliteration: string;
+  revelationType: string;
+  numberOfAyahs: number;
+  fromAyah: number;
+  toAyah: number;
+}
 
 export type TabParamList = {
   index: undefined;
@@ -187,3 +199,55 @@ export type TabParamList = {
   qibla: undefined;
   profile: undefined;
 };
+
+// ─── Hadith Types ───────────────────────────────
+export interface HadithCollection {
+  id: string;
+  nameAr: string;
+  nameEn: string;
+  nameFr: string;
+  author: string;
+  authorAr: string;
+  totalHadiths: number;
+  descriptionEn: string;
+  descriptionFr: string;
+  gradient: readonly [string, string];
+  icon: string; // Ionicons name
+}
+
+export interface Hadith {
+  id: number;
+  collectionId: string;
+  number: number;
+  chapterEn: string;
+  chapterFr: string;
+  textAr: string;
+  phonetic?: string;
+  textEn: string;
+  textFr: string;
+  narratorEn: string;
+  narratorFr: string;
+  reference: string;
+}
+
+// ─── Dua Types ──────────────────────────────────
+export interface DuaCategory {
+  id: string;
+  nameEn: string;
+  nameFr: string;
+  icon: string; // Ionicons name
+  gradient: readonly [string, string];
+}
+
+export interface Dua {
+  id: number;
+  categoryId: string;
+  titleEn: string;
+  titleFr: string;
+  textAr: string;
+  phonetic?: string;
+  textEn: string;
+  textFr: string;
+  referenceEn: string;
+  referenceFr: string;
+}
