@@ -1,5 +1,5 @@
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
-import type { AudioPlayer as ExpoAudioPlayer } from 'expo-audio/build/AudioModule.types';
+import { createAudioPlayer, setAudioModeAsync } from "expo-audio";
+import type { AudioPlayer as ExpoAudioPlayer } from "expo-audio/build/AudioModule.types";
 
 export interface AudioTrack {
   globalAyahNumber: number;
@@ -33,6 +33,8 @@ const INITIAL_STATE: PlaybackState = {
 
 class AudioPlayerManager {
   private player: ExpoAudioPlayer | null = null;
+  private nextPlayer: ExpoAudioPlayer | null = null;
+  private nextTrackIndex: number = -1;
   private state: PlaybackState = { ...INITIAL_STATE };
   private listeners: Set<(state: PlaybackState) => void> = new Set();
   private initialized = false;
@@ -63,6 +65,39 @@ class AudioPlayerManager {
     return this.state;
   }
 
+  private cleanupNextPlayer() {
+    if (this.nextPlayer) {
+      try {
+        this.nextPlayer.remove();
+      } catch {
+        // ignore cleanup errors
+      }
+      this.nextPlayer = null;
+      this.nextTrackIndex = -1;
+    }
+  }
+
+  private async preloadNextTrack() {
+    const nextIndex = this.state.currentIndex + 1;
+    if (nextIndex >= this.state.playlist.length) return;
+    if (nextIndex === this.nextTrackIndex && this.nextPlayer) return;
+
+    const track = this.state.playlist[nextIndex];
+    if (!track) return;
+
+    try {
+      this.cleanupNextPlayer();
+      const uri = track.localUri || track.audioUrl;
+      this.nextPlayer = createAudioPlayer(uri);
+      this.nextTrackIndex = nextIndex;
+      console.log("[AudioPlayer] Pre-buffered track", nextIndex);
+    } catch (err) {
+      console.error("[AudioPlayer] Error preloading next track:", err);
+      this.nextPlayer = null;
+      this.nextTrackIndex = -1;
+    }
+  }
+
   async loadPlaylist(tracks: AudioTrack[], startIndex = 0) {
     // Silently clean up previous player without broadcasting a full reset
     if (this.player) {
@@ -70,6 +105,7 @@ class AudioPlayerManager {
       this.player.remove();
       this.player = null;
     }
+    this.cleanupNextPlayer();
     this.updateState({ playlist: tracks, currentIndex: startIndex });
     await this.playTrackAtIndex(startIndex);
   }
@@ -93,17 +129,25 @@ class AudioPlayerManager {
     });
 
     try {
-      const uri = track.localUri || track.audioUrl;
-
       // Remove previous player if it exists
       if (this.player) {
         this.player.remove();
         this.player = null;
       }
 
-      this.player = createAudioPlayer(uri);
+      // Use pre-buffered player if available for this index
+      if (this.nextPlayer && this.nextTrackIndex === index) {
+        console.log("[AudioPlayer] Using pre-buffered player for track", index);
+        this.player = this.nextPlayer;
+        this.nextPlayer = null;
+        this.nextTrackIndex = -1;
+      } else {
+        this.cleanupNextPlayer();
+        const uri = track.localUri || track.audioUrl;
+        this.player = createAudioPlayer(uri);
+      }
 
-      this.player.addListener('playbackStatusUpdate', (status) => {
+      this.player.addListener("playbackStatusUpdate", (status) => {
         // Only update position/duration — never overwrite isPlaying from here
         this.updateState({
           positionMs: (status.currentTime || 0) * 1000,
@@ -127,8 +171,11 @@ class AudioPlayerManager {
 
       this.player.play();
       this.updateState({ isPlaying: true, isPaused: false, isLoading: false });
+
+      // Pre-buffer the next track while this one plays
+      this.preloadNextTrack();
     } catch (error) {
-      console.error('[AudioPlayer] Error loading track:', error);
+      console.error("[AudioPlayer] Error loading track:", error);
       this.updateState({ isLoading: false });
     }
   }
@@ -160,6 +207,7 @@ class AudioPlayerManager {
       this.player.remove();
       this.player = null;
     }
+    this.cleanupNextPlayer();
     this.updateState({ ...INITIAL_STATE });
   }
 

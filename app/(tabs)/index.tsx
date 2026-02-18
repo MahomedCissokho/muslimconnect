@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Image,
   ScrollView,
@@ -8,28 +8,28 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import menuIcon from '../../assets/images/menu.png';
-import quranImage from '../../assets/images/quran.png';
-import searchIcon from '../../assets/images/search-bar.png';
-import { HizbList, JuzList, PageList, SurahList } from '../../src/components';
-import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../../src/constants';
-import { SURAHS, TOTAL_AYAHS, TOTAL_SURAHS } from '../../src/data';
+import menuIcon from "../../assets/images/menu.png";
+import quranImage from "../../assets/images/quran.png";
+import searchIcon from "../../assets/images/search-bar.png";
+import { HizbList, JuzList, PageList, SurahList } from "../../src/components";
+import { BORDER_RADIUS, COLORS, FONTS, SPACING } from "../../src/constants";
+import { SURAHS, TOTAL_AYAHS, TOTAL_SURAHS } from "../../src/data";
 
-type TabType = 'surah' | 'page' | 'juzz' | 'hizb';
+type TabType = "surah" | "page" | "juzz" | "hizb";
 
 export default function QuranScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('surah');
+  const [activeTab, setActiveTab] = useState<TabType>("surah");
 
   const tabs: { key: TabType; label: string }[] = [
-    { key: 'surah', label: t('quran.surah') },
-    { key: 'page', label: t('quran.page') },
-    { key: 'juzz', label: t('quran.juzz') },
-    { key: 'hizb', label: t('quran.hizb') },
+    { key: "surah", label: t("quran.surah") },
+    { key: "page", label: t("quran.page") },
+    { key: "juzz", label: t("quran.juzz") },
+    { key: "hizb", label: t("quran.hizb") },
   ];
 
   const handleSurahPress = (surahNumber: number) => {
@@ -50,13 +50,13 @@ export default function QuranScreen() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'surah':
+      case "surah":
         return <SurahList surahs={SURAHS} onSurahPress={handleSurahPress} />;
-      case 'juzz':
+      case "juzz":
         return <JuzList onJuzPress={handleJuzPress} />;
-      case 'page':
+      case "page":
         return <PageList onPagePress={handlePagePress} />;
-      case 'hizb':
+      case "hizb":
         return <HizbList onHizbPress={handleHizbPress} />;
       default:
         return null;
@@ -68,20 +68,31 @@ export default function QuranScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.push('/settings' as any)}>
-            <Image source={menuIcon} style={styles.headerIcon} resizeMode="contain" />
+          <TouchableOpacity onPress={() => router.push("/settings" as any)}>
+            <Image
+              source={menuIcon}
+              style={styles.headerIcon}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{t('common.appName')}</Text>
+          <Text style={styles.headerTitle}>{t("common.appName")}</Text>
         </View>
         <TouchableOpacity>
-          <Image source={searchIcon} style={styles.headerIcon} resizeMode="contain" />
+          <Image
+            source={searchIcon}
+            style={styles.headerIcon}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Greeting */}
         <View style={styles.greetingSection}>
-          <Text style={styles.greetingSubtext}>{t('home.greeting')}</Text>
+          <Text style={styles.greetingSubtext}>{t("home.greeting")}</Text>
           <Text style={styles.greetingName}>Mahomed Cissokho</Text>
         </View>
 
@@ -92,13 +103,17 @@ export default function QuranScreen() {
               <View style={styles.lastReadHeader}>
                 <View style={styles.lastReadBadge}>
                   <Text style={styles.lastReadIcon}>📖</Text>
-                  <Text style={styles.lastReadLabel}>{t('home.lastRead')}</Text>
+                  <Text style={styles.lastReadLabel}>{t("home.lastRead")}</Text>
                 </View>
               </View>
               <Text style={styles.lastReadTitle}>Al-Fatiha</Text>
-              <Text style={styles.lastReadSubtitle}>{t('home.ayahNo')}: 1</Text>
+              <Text style={styles.lastReadSubtitle}>{t("home.ayahNo")}: 1</Text>
             </View>
-            <Image source={quranImage} style={styles.quranImage} resizeMode="contain" />
+            <Image
+              source={quranImage}
+              style={styles.quranImage}
+              resizeMode="contain"
+            />
           </View>
         </View>
 
@@ -106,18 +121,21 @@ export default function QuranScreen() {
         <View style={styles.filterTabs}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
-            const buttonStyle = isActive ? styles.activeTab : styles.inactiveTab;
-            const textStyle = isActive ? styles.activeTabText : styles.inactiveTabText;
+            const buttonStyle = isActive
+              ? styles.activeTab
+              : styles.inactiveTab;
+            const textStyle = isActive
+              ? styles.activeTabText
+              : styles.inactiveTabText;
 
             return (
               <TouchableOpacity
                 key={tab.key}
                 style={buttonStyle}
                 onPress={() => setActiveTab(tab.key)}
+                activeOpacity={1}
               >
-                <Text style={textStyle}>
-                  {tab.label}
-                </Text>
+                <Text style={textStyle}>{tab.label}</Text>
                 {isActive && <View style={styles.activeTabIndicator} />}
               </TouchableOpacity>
             );
@@ -128,10 +146,11 @@ export default function QuranScreen() {
         {renderContent()}
 
         {/* Footer */}
-        {activeTab === 'surah' && (
+        {activeTab === "surah" && (
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              {t('common.total')}: {TOTAL_SURAHS} {t('common.surahs')} • {TOTAL_AYAHS} {t('common.verses')}
+              {t("common.total")}: {TOTAL_SURAHS} {t("common.surahs")} •{" "}
+              {TOTAL_AYAHS} {t("common.verses")}
             </Text>
           </View>
         )}
@@ -146,15 +165,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING['2xl'],
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: SPACING["2xl"],
     paddingVertical: SPACING.lg,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   headerIcon: {
     width: 24,
@@ -171,7 +190,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greetingSection: {
-    paddingHorizontal: SPACING['2xl'],
+    paddingHorizontal: SPACING["2xl"],
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.xl,
   },
@@ -187,17 +206,17 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   cardContainer: {
-    marginHorizontal: SPACING['2xl'],
-    marginBottom: SPACING['2xl'],
+    marginHorizontal: SPACING["2xl"],
+    marginBottom: SPACING["2xl"],
   },
   lastReadCard: {
     backgroundColor: COLORS.purple,
-    borderRadius: BORDER_RADIUS['2xl'],
+    borderRadius: BORDER_RADIUS["2xl"],
     padding: SPACING.xl,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    overflow: 'hidden',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    overflow: "hidden",
     minHeight: 140,
   },
   lastReadContent: {
@@ -208,13 +227,13 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   lastReadBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.whiteAlpha15,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: BORDER_RADIUS['2xl'],
-    alignSelf: 'flex-start',
+    borderRadius: BORDER_RADIUS["2xl"],
+    alignSelf: "flex-start",
   },
   lastReadIcon: {
     fontSize: 14,
@@ -239,13 +258,13 @@ const styles = StyleSheet.create({
   quranImage: {
     width: 140,
     height: 140,
-    position: 'absolute',
+    position: "absolute",
     right: -10,
     bottom: -10,
   },
   filterTabs: {
-    flexDirection: 'row',
-    paddingHorizontal: SPACING['2xl'],
+    flexDirection: "row",
+    paddingHorizontal: SPACING["2xl"],
     marginBottom: SPACING.lg,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -254,9 +273,8 @@ const styles = StyleSheet.create({
   activeTab: {
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    marginRight: SPACING['2xl'],
-    position: 'relative',
-    color: COLORS.primary,
+    marginRight: SPACING["2xl"],
+    position: "relative",
   },
   activeTabText: {
     color: COLORS.white,
@@ -264,10 +282,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   activeTabIndicator: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    left: SPACING.lg,
-    right: SPACING.lg,
+    left: 0,
+    right: 0,
     height: 3,
     backgroundColor: COLORS.gold,
     borderTopLeftRadius: 3,
@@ -284,11 +302,11 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
   },
   footer: {
-    paddingHorizontal: SPACING['2xl'],
-    paddingVertical: SPACING['2xl'],
+    paddingHorizontal: SPACING["2xl"],
+    paddingVertical: SPACING["2xl"],
   },
   footerText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: COLORS.gray400,
     fontSize: 14,
     fontFamily: FONTS.regular,
