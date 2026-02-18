@@ -1,12 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { DEFAULT_RECITER_ID } from '../data/reciters';
+import { DEFAULT_RECITER_ID } from "../data/reciters";
 
 // --- Storage keys ---
 const KEYS = {
-  RECITER_ID: '@settings/reciterId',
-  DISPLAY_OPTIONS: '@settings/displayOptions',
-  LANGUAGE: '@settings/language',
+  RECITER_ID: "@settings/reciterId",
+  DISPLAY_OPTIONS: "@settings/displayOptions",
+  LANGUAGE: "@settings/language",
 } as const;
 
 // --- Types ---
@@ -16,7 +16,7 @@ export interface DisplayOptions {
   showTranslation: boolean;
 }
 
-export type AppLanguage = 'fr' | 'en';
+export type AppLanguage = "fr" | "en";
 
 // --- Defaults ---
 export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
@@ -25,7 +25,18 @@ export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
   showTranslation: true,
 };
 
-export const DEFAULT_LANGUAGE: AppLanguage = 'fr';
+// Detect device language at module level for default
+const getDeviceDefault = (): AppLanguage => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { getLocales } = require("expo-localization");
+    const code = getLocales()?.[0]?.languageCode;
+    if (code === "en") return "en";
+  } catch {}
+  return "fr";
+};
+
+export const DEFAULT_LANGUAGE: AppLanguage = getDeviceDefault();
 
 // --- Service ---
 export const settingsService = {
@@ -59,7 +70,7 @@ export const settingsService = {
   // Language
   async getLanguage(): Promise<AppLanguage> {
     const value = await AsyncStorage.getItem(KEYS.LANGUAGE);
-    if (value === 'en' || value === 'fr') {
+    if (value === "en" || value === "fr") {
       return value;
     }
     return DEFAULT_LANGUAGE;

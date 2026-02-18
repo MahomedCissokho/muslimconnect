@@ -11,12 +11,22 @@
     "surahs": "sourates"
   },
   "onboarding": {
-    "description": "Découvrez, écoutez et apprenez le Coran avec Tajwid, encore mieux traductions, tafsir, horaires de prières, Qibla et invocations."
+    "description": "Votre compagnon spirituel au quotidien. Lisez, écoutez et méditez le Saint Coran, suivez vos prières et rapprochez-vous d'Allah.",
+    "getStarted": "Commencer",
+    "featureQuran": "Coran complet",
+    "featureQuranDesc": "Lecture, traduction & tajwid",
+    "featurePrayer": "Horaires de prière",
+    "featurePrayerDesc": "Précis selon votre position",
+    "featureAudio": "Récitation audio",
+    "featureAudioDesc": "Plusieurs récitateurs célèbres",
+    "featureQibla": "Qibla & Duas",
+    "featureQiblaDesc": "Boussole & invocations"
   },
   "home": {
     "greeting": "Assalamu alaikum",
     "lastRead": "Dernière lecture",
-    "ayahNo": "Ayah N°"
+    "ayahNo": "Ayah N°",
+    "noLastRead": "Aucune lecture"
   },
   "tabs": {
     "quran": "Coran",
@@ -87,10 +97,20 @@
     "tryAgain": "Impossible de récupérer les horaires de prière. Veuillez vérifier votre connexion et réessayer."
   },
   "hadith": {
-    "title": "Hadiths"
+    "title": "Hadiths",
+    "subtitle": "Paroles du Prophète ﷺ",
+    "collections": "Collections",
+    "copy": "Copier",
+    "share": "Partager",
+    "copied": "Copié !"
   },
   "duas": {
-    "title": "Duas"
+    "title": "Duas",
+    "subtitle": "Invocations & Rappels",
+    "invocations": "invocations",
+    "copy": "Copier",
+    "share": "Partager",
+    "copied": "Copié !"
   },
   "bookmark": {
     "title": "Favoris"

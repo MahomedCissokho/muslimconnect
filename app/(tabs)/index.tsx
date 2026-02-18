@@ -1,13 +1,13 @@
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,7 +16,16 @@ import quranImage from "../../assets/images/quran.png";
 import searchIcon from "../../assets/images/search-bar.png";
 import { HizbList, JuzList, PageList, SurahList } from "../../src/components";
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from "../../src/constants";
-import { SURAHS, TOTAL_AYAHS, TOTAL_SURAHS } from "../../src/data";
+import {
+    HIZB_QUARTERS,
+    SURAHS,
+    TOTAL_AYAHS,
+    TOTAL_SURAHS,
+} from "../../src/data";
+import {
+    lastReadService,
+    type LastReadData,
+} from "../../src/services/lastRead";
 
 type TabType = "surah" | "page" | "juzz" | "hizb";
 
@@ -24,6 +33,22 @@ export default function QuranScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("surah");
+  const [lastRead, setLastRead] = useState<LastReadData | null>(null);
+
+  // Reload last read every time screen gets focus
+  useFocusEffect(
+    useCallback(() => {
+      lastReadService
+        .get()
+        .then(setLastRead)
+        .catch(() => {});
+    }, []),
+  );
+
+  // Derive display info from lastRead
+  const lastReadSurah = lastRead
+    ? SURAHS.find((s) => s.number === lastRead.surahNumber)
+    : null;
 
   const tabs: { key: TabType; label: string }[] = [
     { key: "surah", label: t("quran.surah") },
@@ -37,15 +62,19 @@ export default function QuranScreen() {
   };
 
   const handleJuzPress = (juzNumber: number) => {
-    // Navigation vers le juz
+    router.push(`/juz/${juzNumber}` as any);
   };
 
   const handlePagePress = (pageNumber: number) => {
-    // Navigation vers la page
+    router.push(`/page/${pageNumber}` as any);
   };
 
-  const handleHizbPress = (hizbNumber: number) => {
-    // Navigation vers le hizb
+  const handleHizbPress = (hizbQuarter: number) => {
+    // Find the hizb number for this quarter and navigate to its detail
+    const quarter = HIZB_QUARTERS.find((q) => q.quarter === hizbQuarter);
+    if (quarter) {
+      router.push(`/hizb/${quarter.hizb}` as any);
+    }
   };
 
   const renderContent = () => {
@@ -77,7 +106,7 @@ export default function QuranScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("common.appName")}</Text>
         </View>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/search" as any)}>
           <Image
             source={searchIcon}
             style={styles.headerIcon}
@@ -97,7 +126,15 @@ export default function QuranScreen() {
         </View>
 
         {/* Last Read Card */}
-        <View style={styles.cardContainer}>
+        <TouchableOpacity
+          style={styles.cardContainer}
+          activeOpacity={0.85}
+          onPress={() => {
+            if (lastRead) {
+              router.push(`/surah/${lastRead.surahNumber}` as any);
+            }
+          }}
+        >
           <View style={styles.lastReadCard}>
             <View style={styles.lastReadContent}>
               <View style={styles.lastReadHeader}>
@@ -106,8 +143,35 @@ export default function QuranScreen() {
                   <Text style={styles.lastReadLabel}>{t("home.lastRead")}</Text>
                 </View>
               </View>
-              <Text style={styles.lastReadTitle}>Al-Fatiha</Text>
-              <Text style={styles.lastReadSubtitle}>{t("home.ayahNo")}: 1</Text>
+              <Text style={styles.lastReadTitle}>
+                {lastReadSurah
+                  ? lastReadSurah.transliteration
+                  : t("home.noLastRead")}
+              </Text>
+              {lastRead && lastReadSurah ? (
+                <>
+                  <Text style={styles.lastReadSubtitle}>
+                    {t("home.ayahNo")}: {lastRead.ayahNumber}
+                  </Text>
+                  <View style={styles.lastReadMeta}>
+                    {lastRead.juz != null && (
+                      <Text style={styles.lastReadMetaText}>
+                        {t("quran.juzz")} {lastRead.juz}
+                      </Text>
+                    )}
+                    {lastRead.page != null && (
+                      <Text style={styles.lastReadMetaText}>
+                        {t("quran.page")} {lastRead.page}
+                      </Text>
+                    )}
+                    {lastRead.hizb != null && (
+                      <Text style={styles.lastReadMetaText}>
+                        {t("quran.hizb")} {lastRead.hizb}
+                      </Text>
+                    )}
+                  </View>
+                </>
+              ) : null}
             </View>
             <Image
               source={quranImage}
@@ -115,7 +179,7 @@ export default function QuranScreen() {
               resizeMode="contain"
             />
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Filter Tabs */}
         <View style={styles.filterTabs}>
@@ -254,6 +318,16 @@ const styles = StyleSheet.create({
     color: COLORS.whiteAlpha70,
     fontSize: 14,
     fontFamily: FONTS.regular,
+  },
+  lastReadMeta: {
+    flexDirection: "row",
+    marginTop: 6,
+    gap: 10,
+  },
+  lastReadMetaText: {
+    color: COLORS.gold,
+    fontSize: 11,
+    fontFamily: FONTS.medium,
   },
   quranImage: {
     width: 140,

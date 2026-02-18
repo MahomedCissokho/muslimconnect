@@ -1,12 +1,12 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { COLORS, FONTS, SPACING } from '../constants';
-import { useAudio } from '../contexts/AudioContext';
-import { getSurahName } from '../data';
+import { COLORS, FONTS, SPACING } from "../constants";
+import { useAudio } from "../contexts/AudioContext";
+import { getSurahName } from "../data";
 
 export const AudioPlayerBar: React.FC = () => {
   const { t } = useTranslation();
@@ -18,11 +18,30 @@ export const AudioPlayerBar: React.FC = () => {
   if (!currentTrack) return null;
 
   const surahName = getSurahName(currentTrack.surahNumber);
-  const progress = playbackState.durationMs > 0
-    ? playbackState.positionMs / playbackState.durationMs
-    : 0;
+  const progress =
+    playbackState.durationMs > 0
+      ? playbackState.positionMs / playbackState.durationMs
+      : 0;
 
-  const navigateToSurah = () => {
+  const navigateToOrigin = () => {
+    if (!currentTrack) return;
+    const origin = currentTrack.origin;
+    if (origin) {
+      switch (origin.type) {
+        case "juz":
+          router.push(`/juz/${origin.id}` as any);
+          return;
+        case "hizb":
+          router.push(`/hizb/${origin.id}` as any);
+          return;
+        case "page":
+          router.push(`/page/${origin.id}` as any);
+          return;
+        default:
+          break;
+      }
+    }
+    // fallback → surah screen
     router.push(`/surah/${currentTrack.surahNumber}` as any);
   };
 
@@ -34,12 +53,16 @@ export const AudioPlayerBar: React.FC = () => {
 
       <View style={styles.content}>
         {/* Tap track info to navigate to surah */}
-        <TouchableOpacity style={styles.trackInfo} onPress={navigateToSurah} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.trackInfo}
+          onPress={navigateToOrigin}
+          activeOpacity={0.7}
+        >
           <Text style={styles.surahName} numberOfLines={1}>
             {surahName}
           </Text>
           <Text style={styles.ayahNumber}>
-            {t('quran.verse')} {currentTrack.ayahNumberInSurah}
+            {t("quran.verse")} {currentTrack.ayahNumberInSurah}
           </Text>
         </TouchableOpacity>
 
@@ -56,7 +79,7 @@ export const AudioPlayerBar: React.FC = () => {
               <Ionicons name="hourglass" size={20} color={COLORS.primary} />
             ) : (
               <Ionicons
-                name={isPlaying ? 'pause' : 'play'}
+                name={isPlaying ? "pause" : "play"}
                 size={20}
                 color={COLORS.primary}
               />
@@ -91,9 +114,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gold,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
   },
@@ -113,22 +136,22 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: SPACING.md,
   },
   controlBtn: {
     width: 32,
     height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   playBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: COLORS.gold,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

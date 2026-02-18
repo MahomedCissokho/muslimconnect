@@ -11,12 +11,22 @@
     "surahs": "surahs"
   },
   "onboarding": {
-    "description": "Discover, listen and learn the Quran with Tajweed, plus translations, tafsir, prayer times, Qibla and supplications."
+    "description": "Your daily spiritual companion. Read, listen and reflect on the Holy Quran, track your prayers and grow closer to Allah.",
+    "getStarted": "Get Started",
+    "featureQuran": "Full Quran",
+    "featureQuranDesc": "Read, translate & tajweed",
+    "featurePrayer": "Prayer Times",
+    "featurePrayerDesc": "Accurate based on location",
+    "featureAudio": "Audio Recitation",
+    "featureAudioDesc": "Multiple renowned reciters",
+    "featureQibla": "Qibla & Duas",
+    "featureQiblaDesc": "Compass & supplications"
   },
   "home": {
     "greeting": "Assalamu alaikum",
     "lastRead": "Last Read",
-    "ayahNo": "Ayah No"
+    "ayahNo": "Ayah No",
+    "noLastRead": "No reading yet"
   },
   "tabs": {
     "quran": "Quran",
@@ -87,10 +97,20 @@
     "tryAgain": "Could not fetch prayer times. Please check your connection and try again."
   },
   "hadith": {
-    "title": "Hadith"
+    "title": "Hadith",
+    "subtitle": "Words of the Prophet ﷺ",
+    "collections": "Collections",
+    "copy": "Copy",
+    "share": "Share",
+    "copied": "Copied!"
   },
   "duas": {
-    "title": "Duas"
+    "title": "Duas",
+    "subtitle": "Supplications & Remembrance",
+    "invocations": "duas",
+    "copy": "Copy",
+    "share": "Share",
+    "copied": "Copied!"
   },
   "bookmark": {
     "title": "Bookmarks"
