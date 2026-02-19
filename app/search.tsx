@@ -1,20 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -87,6 +87,7 @@ export default function SearchScreen() {
         normalize(s.englishName).includes(q) ||
         normalize(s.transliteration).includes(q) ||
         normalize(s.englishNameTranslation).includes(q) ||
+        normalize(s.frenchNameTranslation).includes(q) ||
         num === q
       );
     })
@@ -154,8 +155,8 @@ export default function SearchScreen() {
             </View>
             <Text style={styles.resultTitle}>{s.transliteration}</Text>
             <Text style={styles.resultMeta}>
-              {s.englishNameTranslation} · {s.numberOfAyahs}{" "}
-              {isFr ? "versets" : "verses"}
+              {isFr ? s.frenchNameTranslation : s.englishNameTranslation} ·{" "}
+              {s.numberOfAyahs} {isFr ? "versets" : "verses"}
             </Text>
           </View>
           <View style={styles.resultRight}>

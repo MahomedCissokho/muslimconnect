@@ -1,19 +1,24 @@
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 
 import { DEFAULT_RECITER_ID } from "../data/reciters";
 import {
-  DEFAULT_DISPLAY_OPTIONS,
-  DEFAULT_LANGUAGE,
-  settingsService,
-  type AppLanguage,
-  type DisplayOptions,
+    DEFAULT_NOTIFICATION_SETTINGS,
+    notificationService,
+    type NotificationSettings,
+} from "../services/notifications";
+import {
+    DEFAULT_DISPLAY_OPTIONS,
+    DEFAULT_LANGUAGE,
+    settingsService,
+    type AppLanguage,
+    type DisplayOptions,
 } from "../services/settings";
 
 interface SettingsContextValue {
@@ -23,6 +28,11 @@ interface SettingsContextValue {
   updateDisplayOption: (key: keyof DisplayOptions, value: boolean) => void;
   language: AppLanguage;
   setLanguage: (lang: AppLanguage) => void;
+  notificationSettings: NotificationSettings;
+  updateNotificationSetting: (
+    key: keyof NotificationSettings,
+    value: boolean,
+  ) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -40,22 +50,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     DEFAULT_DISPLAY_OPTIONS,
   );
   const [language, setLanguageState] = useState<AppLanguage>(DEFAULT_LANGUAGE);
+  const [notificationSettings, setNotificationSettingsState] =
+    useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load all settings from AsyncStorage on mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [savedReciterId, savedDisplayOptions, savedLanguage] =
-          await Promise.all([
-            settingsService.getReciterId(),
-            settingsService.getDisplayOptions(),
-            settingsService.getLanguage(),
-          ]);
+        const [
+          savedReciterId,
+          savedDisplayOptions,
+          savedLanguage,
+          savedNotifSettings,
+        ] = await Promise.all([
+          settingsService.getReciterId(),
+          settingsService.getDisplayOptions(),
+          settingsService.getLanguage(),
+          notificationService.getSettings(),
+        ]);
 
         setReciterIdState(savedReciterId);
         setDisplayOptionsState(savedDisplayOptions);
         setLanguageState(savedLanguage);
+        setNotificationSettingsState(savedNotifSettings);
 
         // Sync i18n language with saved preference
         if (i18n.language !== savedLanguage) {
@@ -69,7 +87,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     loadSettings();
-  }, []);
+  }, [i18n]);
 
   const setReciterId = useCallback((id: string) => {
     setReciterIdState(id);
@@ -106,6 +124,53 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     [i18n],
   );
 
+  const updateNotificationSetting = useCallback(
+    async (
+      key: keyof NotificationSettings,
+      value: boolean,
+    ): Promise<boolean> => {
+      const lang = (i18n.language as AppLanguage) || "fr";
+
+      try {
+        let success = false;
+
+        switch (key) {
+          case "prayerNotifications":
+            success = await notificationService.togglePrayerNotifications(
+              value,
+              undefined,
+              lang,
+            );
+            break;
+          case "morningAdhkar":
+            success = await notificationService.toggleMorningAdhkar(
+              value,
+              lang,
+            );
+            break;
+          case "eveningAdhkar":
+            success = await notificationService.toggleEveningAdhkar(
+              value,
+              lang,
+            );
+            break;
+        }
+
+        if (success) {
+          setNotificationSettingsState((prev) => ({ ...prev, [key]: value }));
+        }
+        return success;
+      } catch (error) {
+        console.warn(
+          `[Settings] Failed to update notification setting ${key}:`,
+          error,
+        );
+        return false;
+      }
+    },
+    [i18n],
+  );
+
   return (
     <SettingsContext.Provider
       value={{
@@ -115,6 +180,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
         updateDisplayOption,
         language,
         setLanguage,
+        notificationSettings,
+        updateNotificationSetting,
         isLoading,
       }}
     >

@@ -2,22 +2,22 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { LinearGradient } from "expo-linear-gradient";
 import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    ScrollView,
+    Share,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -25,19 +25,19 @@ import { COLORS } from "../../src/constants/colors";
 import { FONTS, FONT_SIZES } from "../../src/constants/fonts";
 import { BORDER_RADIUS, SPACING } from "../../src/constants/spacing";
 import {
-  HADITH_COLLECTIONS,
-  getHadithsByCollection,
+    HADITH_COLLECTIONS,
+    getHadithsByCollection,
 } from "../../src/data/hadiths";
 import type { HadithBookmark } from "../../src/services/bookmarks";
 import { bookmarkService } from "../../src/services/bookmarks";
 import type {
-  HadeethCategory,
-  HadeethListItem,
+    HadeethCategory,
+    HadeethListItem,
 } from "../../src/services/hadithApi";
 import {
-  fetchHadeethCategories,
-  fetchHadeethDetail,
-  fetchHadeethList,
+    fetchHadeethCategories,
+    fetchHadeethDetail,
+    fetchHadeethList,
 } from "../../src/services/hadithApi";
 import type { Hadith, HadithCollection } from "../../src/types";
 
@@ -303,6 +303,13 @@ function ApiHadithCard({
   const [translation, setTranslation] = useState<string | null>(null);
   const [loadingBody, setLoadingBody] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [savedMark, setSavedMark] = useState(false);
+
+  const bookmarkId = `hadith_api_${item.id}`;
+
+  useEffect(() => {
+    bookmarkService.isBookmarked(bookmarkId).then(setSavedMark);
+  }, [bookmarkId]);
 
   const handleExpand = useCallback(async () => {
     const next = !expanded;
@@ -332,6 +339,26 @@ function ApiHadithCard({
     await Share.share({ message: text });
   }, [item, translation]);
 
+  const handleBookmark = useCallback(async () => {
+    const bm: HadithBookmark = {
+      type: "hadith",
+      id: bookmarkId,
+      collectionId: "hadeethenc",
+      collectionNameFr: "HadeethEnc",
+      collectionNameEn: "HadeethEnc",
+      hadithNumber: index + 1,
+      textAr: item.hadeeth,
+      textFr: translation ?? item.title,
+      textEn: translation ?? item.title,
+      narratorFr: item.attribution,
+      narratorEn: item.attribution,
+      reference: item.grade || item.attribution,
+      savedAt: new Date().toISOString(),
+    };
+    const added = await bookmarkService.toggle(bm);
+    setSavedMark(added);
+  }, [bookmarkId, item, index, translation]);
+
   return (
     <HadithCardShell
       num={index + 1}
@@ -347,6 +374,8 @@ function ApiHadithCard({
       onShare={handleShare}
       loading={loadingBody}
       translation={translation}
+      isBookmarked={savedMark}
+      onBookmark={handleBookmark}
     />
   );
 }

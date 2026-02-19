@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getLocales } from "expo-localization";
 
 import { DEFAULT_RECITER_ID } from "../data/reciters";
 
@@ -28,8 +29,6 @@ export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
 // Detect device language at module level for default
 const getDeviceDefault = (): AppLanguage => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getLocales } = require("expo-localization");
     const code = getLocales()?.[0]?.languageCode;
     if (code === "en") return "en";
   } catch {}

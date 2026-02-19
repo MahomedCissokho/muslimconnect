@@ -1,7 +1,7 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { COLORS, FONTS, SPACING } from '../constants';
+import { COLORS, FONTS, SPACING } from "../constants";
 
 interface ToggleSwitchProps {
   label: string;
@@ -36,11 +36,11 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING['2xl'],
+    paddingHorizontal: SPACING["2xl"],
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
@@ -57,14 +57,15 @@ const styles = StyleSheet.create({
     color: COLORS.gray400,
     fontFamily: FONTS.regular,
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
+    lineHeight: 16,
   },
   track: {
     width: 48,
     height: 28,
     borderRadius: 14,
     backgroundColor: COLORS.gray600,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 2,
   },
   trackActive: {
@@ -77,6 +78,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   thumbActive: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
+  },
+  containerDisabled: {
+    opacity: 0.5,
+  },
+  labelDisabled: {
+    opacity: 0.7,
   },
 });

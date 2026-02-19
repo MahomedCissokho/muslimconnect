@@ -10,9 +10,9 @@ import { QuranGroupDetail } from "../../src/components/QuranGroupDetail";
 import { COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAudio } from "../../src/contexts/AudioContext";
 import {
-    getSurahsInRange,
-    getSurahTransliteration,
-    JUZ_LIST,
+  getSurahsInRange,
+  getSurahTransliteration,
+  JUZ_LIST,
 } from "../../src/data";
 
 export default function JuzDetailScreen() {
@@ -20,7 +20,7 @@ export default function JuzDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const juzNumber = id ? parseInt(id, 10) : null;
-  const { playbackState, stop } = useAudio();
+  const { playbackState, stop, pause, resume } = useAudio();
 
   const juz = useMemo(
     () => JUZ_LIST.find((j) => j.number === juzNumber),
@@ -52,15 +52,19 @@ export default function JuzDetailScreen() {
   if (!juz) return null;
 
   // ── Derive audio state ────────────────────────
-  const isPlayingAll =
-    (playbackState.isPlaying || playbackState.isLoading) &&
+  const isThisGroupActive =
     playbackState.currentTrack?.origin?.type === "juz" &&
     playbackState.currentTrack?.origin?.id === juzNumber;
 
-  const isLoadingPlayAll =
-    playbackState.isLoading &&
-    playbackState.currentTrack?.origin?.type === "juz" &&
-    playbackState.currentTrack?.origin?.id === juzNumber;
+  const isPlayingAll =
+    (playbackState.isPlaying ||
+      playbackState.isPaused ||
+      playbackState.isLoading) &&
+    isThisGroupActive;
+
+  const isPausedAll = playbackState.isPaused && isThisGroupActive;
+
+  const isLoadingPlayAll = playbackState.isLoading && isThisGroupActive;
 
   const currentPlayingSurahNumber = isPlayingAll
     ? playbackState.currentTrack?.surahNumber
@@ -69,15 +73,20 @@ export default function JuzDetailScreen() {
   // Navigate to surah screen with autoPlay + origin params for the first surah
   const handlePlayAll = () => {
     if (surahs.length === 0) return;
-    // Toggle: stop if already playing this juz
-    if (isPlayingAll) {
-      stop();
+    // Pause/Resume if already active for this juz
+    if (isPlayingAll && !isPausedAll) {
+      pause();
       return;
     }
-    const first = surahs[0];
-    router.push(
-      `/surah/${first.number}?fromAyah=${first.fromAyah}&toAyah=${first.toAyah}&autoPlay=1&originType=juz&originId=${juzNumber}` as any,
-    );
+    if (isPausedAll) {
+      resume();
+      return;
+    }
+    router.push(`/reading?type=juz&id=${juzNumber}&autoPlay=1` as any);
+  };
+
+  const handleStopAll = () => {
+    stop();
   };
 
   return (
@@ -106,10 +115,18 @@ export default function JuzDetailScreen() {
         surahs={surahs}
         totalVerses={totalVerses}
         onSurahPress={(num, from, to) =>
-          router.push(`/surah/${num}?fromAyah=${from}&toAyah=${to}` as any)
+          router.push(
+            `/surah/${num}?fromAyah=${from}&toAyah=${to}&originType=juz&originId=${juzNumber}` as any,
+          )
         }
+        onHeroPress={() => {
+          if (surahs.length === 0) return;
+          router.push(`/reading?type=juz&id=${juzNumber}` as any);
+        }}
         onPlayAll={handlePlayAll}
+        onStopAll={handleStopAll}
         isPlayingAll={isPlayingAll}
+        isPausedAll={isPausedAll}
         isLoadingPlayAll={isLoadingPlayAll}
         currentPlayingSurahNumber={currentPlayingSurahNumber}
       />

@@ -53,7 +53,7 @@ class AudioPlayerManager {
     if (this.initialized) return;
     await setAudioModeAsync({
       playsInSilentMode: true,
-      shouldPlayInBackground: true,
+      shouldPlayInBackground: false,
     });
     this.initialized = true;
   }
@@ -108,13 +108,8 @@ class AudioPlayerManager {
   }
 
   async loadPlaylist(tracks: AudioTrack[], startIndex = 0) {
-    // Silently clean up previous player without broadcasting a full reset
-    if (this.player) {
-      this.player.pause();
-      this.player.remove();
-      this.player = null;
-    }
-    this.cleanupNextPlayer();
+    // Stop any active playback first to prevent dual audio on Android
+    await this.stop();
     this.updateState({ playlist: tracks, currentIndex: startIndex });
     await this.playTrackAtIndex(startIndex);
   }
@@ -138,9 +133,18 @@ class AudioPlayerManager {
     });
 
     try {
-      // Remove previous player if it exists
+      // Remove previous player if it exists — prevents dual audio on Android
       if (this.player) {
-        this.player.remove();
+        try {
+          this.player.pause();
+        } catch {
+          /* ignore */
+        }
+        try {
+          this.player.remove();
+        } catch {
+          /* ignore */
+        }
         this.player = null;
       }
 

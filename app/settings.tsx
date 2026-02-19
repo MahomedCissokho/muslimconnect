@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,17 +11,18 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 import backIcon from '../assets/images/back.png';
 import { ReciterSelector, ToggleSwitch } from '../src/components';
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../src/constants';
-import { RECITERS } from '../src/data/reciters';
+import { useAuth } from '../src/contexts/AuthContext';
 import { useSettings } from '../src/contexts/SettingsContext';
+import { RECITERS } from '../src/data/reciters';
 
 export default function SettingsScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { user, signOut } = useAuth();
   const {
     reciterId,
     setReciterId,
@@ -29,6 +31,15 @@ export default function SettingsScreen() {
     language,
     setLanguage,
   } = useSettings();
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || '';
+  const userEmail = user?.email || '';
+  const initials = userName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || 'U';
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/auth' as any);
+  };
 
   const [reciterModalVisible, setReciterModalVisible] = useState(false);
 
@@ -51,6 +62,18 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+
+        {/* ── Profile section ── */}
+        <View style={styles.profileSection}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{userName}</Text>
+            <Text style={styles.profileEmail}>{userEmail}</Text>
+          </View>
+        </View>
+
         {/* Display section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.display')}</Text>
@@ -121,6 +144,15 @@ export default function SettingsScreen() {
             <Text style={styles.aboutValue}>1.0.0</Text>
           </View>
         </View>
+        {/* Sign out */}
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.signOutRow} onPress={handleSignOut} activeOpacity={0.75}>
+            <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
+            <Text style={styles.signOutText}>{t('settings.signOut')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: SPACING['2xl'] }} />
       </ScrollView>
 
       <ReciterSelector
@@ -231,5 +263,57 @@ const styles = StyleSheet.create({
     color: COLORS.gray400,
     fontFamily: FONTS.regular,
     fontSize: 14,
+  },
+
+  // Profile
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING['2xl'],
+    paddingVertical: SPACING.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    gap: SPACING.lg,
+  },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: COLORS.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    color: COLORS.white,
+    fontFamily: FONTS.semiBold,
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  profileEmail: {
+    color: COLORS.gray500,
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+  },
+
+  // Sign out
+  signOutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING['2xl'],
+  },
+  signOutText: {
+    color: COLORS.error,
+    fontFamily: FONTS.semiBold,
+    fontSize: 15,
   },
 });

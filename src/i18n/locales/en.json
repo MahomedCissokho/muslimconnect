@@ -20,13 +20,21 @@
     "featureAudio": "Audio Recitation",
     "featureAudioDesc": "Multiple renowned reciters",
     "featureQibla": "Qibla & Duas",
-    "featureQiblaDesc": "Compass & supplications"
+    "featureQiblaDesc": "Compass & supplications",
+    "welcome": "Welcome",
+    "subtitle": "Your path to an enriched spiritual life",
+    "featureDuas": "Supplications",
+    "featureDuasDesc": "Daily Adhkar & Duas"
   },
   "home": {
     "greeting": "Assalamu alaikum",
     "lastRead": "Last Read",
     "ayahNo": "Ayah No",
-    "noLastRead": "No reading yet"
+    "noLastRead": "No reading yet",
+    "continueReading": "Continue reading",
+    "welcome": "Welcome",
+    "todayVerse": "Daily verse",
+    "yourProgress": "Your progress"
   },
   "tabs": {
     "quran": "Quran",
@@ -59,7 +67,9 @@
     "mujawwad": "Mujawwad",
     "nowPlaying": "Now Playing",
     "playAyah": "Play verse",
-    "stopAudio": "Stop"
+    "stopAudio": "Stop",
+    "pause": "Pause",
+    "resume": "Resume"
   },
   "settings": {
     "title": "Settings",
@@ -72,7 +82,20 @@
     "language": "Language",
     "about": "About",
     "version": "Version",
-    "storage": "Audio Storage"
+    "storage": "Audio Storage",
+    "notifications": "Notifications",
+    "prayerNotifications": "Prayer Times",
+    "prayerNotificationsDesc": "Get notified at each prayer time",
+    "morningAdhkar": "Morning Adhkar",
+    "morningAdhkarDesc": "Daily reminder at 6:30 AM",
+    "eveningAdhkar": "Evening Adhkar",
+    "eveningAdhkarDesc": "Daily reminder at 8:30 PM before sleeping",
+    "notifPermissionDenied": "Please allow notifications in your settings",
+    "signOut": "Sign Out",
+    "signOutConfirm": "Are you sure you want to sign out?",
+    "cancel": "Cancel",
+    "profile": "Profile",
+    "account": "Account"
   },
   "prayer": {
     "title": "Prayer Times",
@@ -114,6 +137,31 @@
   },
   "bookmark": {
     "title": "Bookmarks"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "createAccount": "Create Account",
+    "signInSubtitle": "Welcome back, may Allah bless your day.",
+    "signUpSubtitle": "Join the community and grow closer to Allah.",
+    "fullName": "Username",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "signUpSuccess": "Account created! Welcome to Muslim Universe.",
+    "emailSentTitle": "Check your email",
+    "emailSentMessage": "A confirmation email has been sent to:",
+    "emailSentHint": "Check your inbox and spam folder, then click the link to activate your account.",
+    "backToLogin": "Back to login",
+    "errorFieldsRequired": "Please fill in all fields.",
+    "errorNameRequired": "Please enter your full name.",
+    "errorPasswordMatch": "Passwords do not match.",
+    "errorPasswordLength": "Password must be at least 6 characters.",
+    "errorInvalidCredentials": "Invalid email or password.",
+    "errorEmailExists": "This email is already registered.",
+    "terms": "By creating an account, you agree to our Terms of Service and Privacy Policy.",
+    "noAccount": "No account yet?",
+    "hasAccount": "Already have an account?"
   },
   "errors": {
     "generic": "An error occurred",

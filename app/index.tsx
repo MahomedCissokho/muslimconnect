@@ -4,13 +4,13 @@ import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -41,7 +41,7 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
 
   const handleGetStarted = () => {
-    router.replace("/(tabs)");
+    router.replace("/auth");
   };
 
   return (
@@ -280,6 +280,11 @@ const styles = StyleSheet.create({
   },
 
   // ─── CTA ────────────────────────────────
+  ctaWrap: {
+    paddingHorizontal: SPACING["2xl"],
+    paddingVertical: SPACING.lg,
+    backgroundColor: COLORS.primary,
+  },
   ctaButton: {
     width: "100%",
     borderRadius: BORDER_RADIUS.full,

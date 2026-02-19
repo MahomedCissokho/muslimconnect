@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -12,6 +13,30 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../constants';
 import { RECITERS, type ReciterInfo } from '../data/reciters';
+
+// ─── Reciter avatar: photo if available, colored circle with Arabic initial otherwise
+
+function ReciterAvatar({ reciter }: { reciter: ReciterInfo }) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+
+  if (reciter.photoUrl && !photoFailed) {
+    return (
+      <Image
+        source={{ uri: reciter.photoUrl }}
+        style={styles.avatarImg}
+        onError={() => setPhotoFailed(true)}
+      />
+    );
+  }
+
+  return (
+    <View style={[styles.avatar, { backgroundColor: reciter.color }]}>
+      <Text style={styles.avatarText}>{reciter.nameAr.charAt(0)}</Text>
+    </View>
+  );
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ReciterSelectorProps {
   visible: boolean;
@@ -56,11 +81,7 @@ export const ReciterSelector: React.FC<ReciterSelectorProps> = ({
                   }}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.avatar, { backgroundColor: reciter.color }]}>
-                    <Text style={styles.avatarText}>
-                      {reciter.nameEn.charAt(0)}
-                    </Text>
-                  </View>
+                  <ReciterAvatar reciter={reciter} />
 
                   <View style={styles.reciterInfo}>
                     <Text style={styles.reciterName}>{getReciterName(reciter)}</Text>
@@ -121,10 +142,18 @@ const styles = StyleSheet.create({
   reciterItemSelected: {
     backgroundColor: COLORS.whiteAlpha15,
   },
+  // Shared size for both photo and avatar
+  avatarImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: SPACING.lg,
+    backgroundColor: COLORS.secondary,
+  },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.lg,
@@ -132,7 +161,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: COLORS.white,
     fontFamily: FONTS.bold,
-    fontSize: 18,
+    fontSize: 20,
   },
   reciterInfo: {
     flex: 1,
