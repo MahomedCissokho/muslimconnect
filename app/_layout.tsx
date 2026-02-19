@@ -11,12 +11,14 @@ import {
     Poppins_700Bold,
     useFonts as usePoppins,
 } from "@expo-google-fonts/poppins";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import "../global.css";
@@ -106,8 +108,37 @@ export default function RootLayout() {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.gold} />
+      <View style={styles.splash}>
+        <LinearGradient
+          colors={["#040C23", "#0D1535", "#121A3A"]}
+          style={StyleSheet.absoluteFillObject}
+        />
+
+        {/* Glow effects */}
+        <View style={[styles.splashGlow, { top: -80, right: -60, width: 280, backgroundColor: "rgba(103,44,188,0.18)" }]} />
+        <View style={[styles.splashGlow, { bottom: 60, left: -80, width: 220, backgroundColor: "rgba(249,189,100,0.06)" }]} />
+
+        {/* Center content */}
+        <View style={styles.splashCenter}>
+          {/* Icon circle */}
+          <LinearGradient
+            colors={["#A855F7", "#7C3AED", "#672CBC"]}
+            style={styles.splashIconCircle}
+          >
+            <Ionicons name="moon" size={38} color="#fff" />
+          </LinearGradient>
+
+          {/* App name */}
+          <Text style={styles.splashName}>MUSLIM UNIVERSE</Text>
+          <Text style={styles.splashTagline}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+        </View>
+
+        {/* Loader */}
+        <ActivityIndicator
+          size="small"
+          color={COLORS.gold}
+          style={styles.splashLoader}
+        />
       </View>
     );
   }
@@ -138,12 +169,53 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
+  // ── Splash screen ──────────────────────────────────────────────────────────
+  splash: {
     flex: 1,
-    justifyContent: "center",
+    backgroundColor: "#040C23",
     alignItems: "center",
-    backgroundColor: COLORS.primary,
+    justifyContent: "center",
   },
+  splashGlow: {
+    position: "absolute",
+    borderRadius: 999,
+    aspectRatio: 1,
+  },
+  splashCenter: {
+    alignItems: "center",
+    gap: 20,
+  },
+  splashIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#A855F7",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.55,
+    shadowRadius: 20,
+    elevation: 14,
+    marginBottom: 4,
+  },
+  splashName: {
+    color: "#F9BD64",
+    fontSize: 20,
+    fontWeight: "700",
+    letterSpacing: 4,
+    textAlign: "center",
+  },
+  splashTagline: {
+    color: "rgba(255,255,255,0.35)",
+    fontSize: 15,
+    textAlign: "center",
+  },
+  splashLoader: {
+    position: "absolute",
+    bottom: 60,
+  },
+
+  // ── App container ───────────────────────────────────────────────────────────
   appContainer: {
     flex: 1,
   },

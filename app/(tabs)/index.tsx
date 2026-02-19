@@ -55,7 +55,7 @@ function getGreeting(): string {
   if (h < 5) return "Tahajjud Mubarak";
   if (h < 12) return "Sabah Al-Khayr";
   if (h < 17) return "As-Salamu Alaykum";
-  if (h < 20) return "Masa' Al-Khayr";
+  if (h < 22) return "Masa' Al-Khayr";
   return "Layla Sa'ida";
 }
 
@@ -151,7 +151,7 @@ export default function QuranScreen() {
           </TouchableOpacity>
 
           <View style={styles.headerMid}>
-            <Text style={styles.crescentEmoji}>☪</Text>
+            <Ionicons name="moon" size={18} color={COLORS.gold} />
             <Text style={styles.headerTitle}>{t("common.appName")}</Text>
           </View>
 
@@ -239,7 +239,7 @@ export default function QuranScreen() {
 
           {/* ── Quick Actions Row ── */}
           <Animated.View style={[styles.actionsSection, entrance(actionsAnim, 28)]}>
-            <Text style={styles.sectionLabel}>{t("home.quickAccess") ?? "Accès rapide"}</Text>
+            <Text style={styles.sectionLabel}>{t("home.quickAccess")}</Text>
             <View style={styles.actionsRow}>
               {quickActions.map((qa) => (
                 <TouchableOpacity
@@ -258,7 +258,7 @@ export default function QuranScreen() {
           </Animated.View>
 
           {/* ── Stats ── */}
-          <Animated.View style={[styles.statsSection, entrance(statsAnim, 20)]}>
+          {/* <Animated.View style={[styles.statsSection, entrance(statsAnim, 20)]}>
             {[
               { icon: "book" as const, val: TOTAL_SURAHS.toString(), lbl: t("common.surahs"), grad: ["#7C3AED", "#A855F7"] as [string, string] },
               { icon: "receipt" as const, val: TOTAL_AYAHS.toLocaleString(), lbl: t("common.verses"), grad: ["#F9BD64", "#F59E0B"] as [string, string] },
@@ -275,7 +275,7 @@ export default function QuranScreen() {
                 </View>
               </React.Fragment>
             ))}
-          </Animated.View>
+          </Animated.View> */}
 
           {/* ── Tabs ── */}
           <Animated.View style={[styles.tabsSection, entrance(tabsAnim, 16)]}>
@@ -333,8 +333,7 @@ const styles = StyleSheet.create({
   avatar: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", shadowColor: "#A855F7", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 8 },
   avatarText: { color: "#fff", fontFamily: FONTS.bold, fontSize: 15 },
   onlineDot: { position: "absolute", bottom: 1, right: 1, width: 11, height: 11, borderRadius: 6, backgroundColor: COLORS.success, borderWidth: 2, borderColor: COLORS.primary },
-  headerMid: { alignItems: "center", gap: 1 },
-  crescentEmoji: { fontSize: 20, color: COLORS.gold, textAlign: "center" },
+  headerMid: { alignItems: "center", gap: 4 },
   headerTitle: { color: COLORS.white, fontFamily: FONTS.bold, fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", opacity: 0.7 },
   searchBtn: { borderRadius: 24, overflow: "hidden" },
   searchBtnInner: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(249,189,100,0.2)" },
@@ -367,7 +366,7 @@ const styles = StyleSheet.create({
   quranImg: { width: 150, height: 150, position: "absolute", right: -18, bottom: -18, opacity: 0.72, zIndex: 1 },
 
   // Quick actions
-  actionsSection: { paddingHorizontal: SPACING["2xl"], marginBottom: SPACING.xl },
+  actionsSection: { paddingHorizontal: SPACING["2xl"], marginBottom: SPACING["3xl"] },
   sectionLabel: { color: COLORS.gray400, fontSize: 11, fontFamily: FONTS.semiBold, letterSpacing: 1.2, textTransform: "uppercase", marginBottom: SPACING.md },
   actionsRow: { flexDirection: "row", justifyContent: "space-between" },
   actionItem: { alignItems: "center", flex: 1 },
