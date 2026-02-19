@@ -114,7 +114,7 @@
     "qiblaBearing": "Bearing",
     "compassUnavailable": "Compass sensor not available on this device",
     "qiblaAligned": "Qibla Found!",
-    "turnToQibla": "Turn to find Qibla",
+    "turnToQibla": "Hold phone flat · rotate until green → Qibla found",
     "locationRequired": "Location Required",
     "enableLocation": "Please enable location services to get accurate prayer times for your area.",
     "fetchError": "Unable to Load",

@@ -11,14 +11,13 @@ import {
     Poppins_700Bold,
     useFonts as usePoppins,
 } from "@expo-google-fonts/poppins";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import "../global.css";
@@ -109,36 +108,66 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return (
       <View style={styles.splash}>
+        {/* Background gradient */}
         <LinearGradient
-          colors={["#040C23", "#0D1535", "#121A3A"]}
+          colors={["#040C23", "#080F28", "#040C23"]}
+          locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFillObject}
         />
 
-        {/* Glow effects */}
-        <View style={[styles.splashGlow, { top: -80, right: -60, width: 280, backgroundColor: "rgba(103,44,188,0.18)" }]} />
-        <View style={[styles.splashGlow, { bottom: 60, left: -80, width: 220, backgroundColor: "rgba(249,189,100,0.06)" }]} />
+        {/* Purple glow — top right */}
+        <View style={[styles.splashGlow, { top: -110, right: -90, width: 360, backgroundColor: "rgba(124,58,237,0.22)" }]} />
+        {/* Gold glow — bottom left */}
+        <View style={[styles.splashGlow, { bottom: -80, left: -110, width: 300, backgroundColor: "rgba(249,189,100,0.07)" }]} />
+        {/* Soft purple — center */}
+        <View style={[styles.splashGlow, { top: 200, left: -60, width: 220, backgroundColor: "rgba(103,44,188,0.09)" }]} />
 
-        {/* Center content */}
+        {/* Decorative star dots */}
+        <View style={[styles.splashDot, { top: 80,  left: 40,  width: 3, height: 3 }]} />
+        <View style={[styles.splashDot, { top: 130, right: 55, width: 2, height: 2 }]} />
+        <View style={[styles.splashDot, { top: 60,  right: 100,width: 2, height: 2 }]} />
+        <View style={[styles.splashDot, { top: 190, left: 28,  width: 2, height: 2 }]} />
+        <View style={[styles.splashDot, { bottom: 180, right: 45, width: 3, height: 3 }]} />
+        <View style={[styles.splashDot, { bottom: 240, left: 35, width: 2, height: 2 }]} />
+        <View style={[styles.splashDot, { bottom: 130, right: 90, width: 2, height: 2 }]} />
+
+        {/* ── Center content ── */}
         <View style={styles.splashCenter}>
-          {/* Icon circle */}
-          <LinearGradient
-            colors={["#A855F7", "#7C3AED", "#672CBC"]}
-            style={styles.splashIconCircle}
-          >
-            <Ionicons name="moon" size={38} color="#fff" />
-          </LinearGradient>
+
+          {/* Outer decorative ring */}
+          <View style={styles.splashOuterRing}>
+            {/* Icon gradient square */}
+            <LinearGradient
+              colors={["#A855F7", "#7C3AED", "#5B21B6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.splashIconCircle}
+            >
+              <Image
+                source={require("../assets/images/quran.png")}
+                style={styles.splashLogo}
+                resizeMode="contain"
+              />
+            </LinearGradient>
+          </View>
+
+          {/* Divider with center diamond */}
+          <View style={styles.splashDivider}>
+            <View style={styles.splashDividerLine} />
+            <View style={styles.splashDividerDiamond} />
+            <View style={styles.splashDividerLine} />
+          </View>
 
           {/* App name */}
           <Text style={styles.splashName}>MUSLIM UNIVERSE</Text>
+
+          {/* Arabic Bismillah */}
           <Text style={styles.splashTagline}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
+
         </View>
 
-        {/* Loader */}
-        <ActivityIndicator
-          size="small"
-          color={COLORS.gold}
-          style={styles.splashLoader}
-        />
+        {/* Bottom loader */}
+        <ActivityIndicator size="small" color={COLORS.gold} style={styles.splashLoader} />
       </View>
     );
   }
@@ -181,34 +210,70 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     aspectRatio: 1,
   },
+  splashDot: {
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
   splashCenter: {
     alignItems: "center",
-    gap: 20,
+    gap: 22,
+  },
+  splashOuterRing: {
+    width: 120,
+    height: 120,
+    borderRadius: 32,
+    borderWidth: 1.5,
+    borderColor: "rgba(168,85,247,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(168,85,247,0.07)",
+    shadowColor: "#A855F7",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    elevation: 14,
   },
   splashIconCircle: {
     width: 96,
     height: 96,
-    borderRadius: 28,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#A855F7",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.55,
-    shadowRadius: 20,
-    elevation: 14,
-    marginBottom: 4,
+  },
+  splashLogo: {
+    width: 60,
+    height: 60,
+  },
+  splashDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  splashDividerLine: {
+    width: 44,
+    height: 1,
+    backgroundColor: "rgba(249,189,100,0.3)",
+  },
+  splashDividerDiamond: {
+    width: 5,
+    height: 5,
+    borderRadius: 1,
+    backgroundColor: "rgba(249,189,100,0.7)",
+    transform: [{ rotate: "45deg" }],
   },
   splashName: {
     color: "#F9BD64",
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: "700",
-    letterSpacing: 4,
+    letterSpacing: 5,
     textAlign: "center",
   },
   splashTagline: {
-    color: "rgba(255,255,255,0.35)",
+    color: "rgba(255,255,255,0.32)",
     fontSize: 15,
     textAlign: "center",
+    letterSpacing: 0.5,
   },
   splashLoader: {
     position: "absolute",

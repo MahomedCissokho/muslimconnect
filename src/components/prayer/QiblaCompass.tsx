@@ -36,15 +36,20 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({
   const lastHapticTime = useRef(0);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // Use Location.watchHeadingAsync for accurate, tilt-compensated heading
+  // Use Location.watchHeadingAsync — gives the correct compass heading on both platforms.
+  // Prefer trueHeading (GPS-calibrated) when available, fall back to magHeading.
   useEffect(() => {
     let sub: Location.LocationSubscription | null = null;
 
     const start = async () => {
       try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setSensorAvailable(false);
+          return;
+        }
+
         sub = await Location.watchHeadingAsync((data) => {
-          // trueHeading is relative to true north (best for Qibla)
-          // Falls back to magHeading if trueHeading unavailable (-1)
           const h = data.trueHeading >= 0 ? data.trueHeading : data.magHeading;
           setHeading(h);
         });
@@ -96,8 +101,8 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({
   }, [heading, qiblaBearing, animatedRotation, isAligned, glowAnim]);
 
   const rotateInterpolation = animatedRotation.interpolate({
-    inputRange: [-720, 720],
-    outputRange: ['-720deg', '720deg'],
+    inputRange: [-3600, 3600],
+    outputRange: ['-3600deg', '3600deg'],
   });
 
   const borderColor = glowAnim.interpolate({
@@ -117,7 +122,7 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({
         <View style={styles.fallbackBox}>
           <Ionicons name="compass-outline" size={48} color={COLORS.gray400} />
           <Text style={styles.fallbackText}>{unavailableLabel}</Text>
-          <Text style={styles.bearingText}>{bearingLabel}: {Math.round(qiblaBearing)}</Text>
+          <Text style={styles.bearingText}>{bearingLabel}: {Math.round(qiblaBearing)}°</Text>
         </View>
       </View>
     );

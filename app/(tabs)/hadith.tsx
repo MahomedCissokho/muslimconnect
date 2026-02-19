@@ -834,6 +834,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.arabic,
     fontSize: 18,
     color: COLORS.gold,
+    includeFontPadding: false,
+    textAlignVertical: "center",
+    lineHeight: 22,
   },
   collPillName: {
     fontFamily: FONTS.semiBold,

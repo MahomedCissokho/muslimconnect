@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.secondary,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
+    zIndex: 100,
+    elevation: 20,
   },
   progressBar: {
     height: 2,

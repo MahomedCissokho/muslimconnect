@@ -48,6 +48,8 @@ class AudioPlayerManager {
   private listeners: Set<(state: PlaybackState) => void> = new Set();
   private initialized = false;
   private advancing = false;
+  // Stored subscription so we can explicitly remove it before destroying the player
+  private statusSubscription: { remove: () => void } | null = null;
 
   private async initialize() {
     if (this.initialized) return;
@@ -74,6 +76,14 @@ class AudioPlayerManager {
     return this.state;
   }
 
+  /** Remove the playbackStatusUpdate listener from the current player. */
+  private removeStatusListener() {
+    if (this.statusSubscription) {
+      try { this.statusSubscription.remove(); } catch { /* ignore */ }
+      this.statusSubscription = null;
+    }
+  }
+
   private cleanupNextPlayer() {
     if (this.nextPlayer) {
       try {
@@ -98,6 +108,10 @@ class AudioPlayerManager {
       this.cleanupNextPlayer();
       const uri = track.localUri || track.audioUrl;
       this.nextPlayer = createAudioPlayer(uri);
+      // On Android, ExoPlayer may auto-start playback when a player is created.
+      // Explicitly pause to prevent the pre-buffered track from playing silently
+      // (which would cause it to be at the end by the time we actually want it).
+      try { this.nextPlayer.pause(); } catch { /* ignore */ }
       this.nextTrackIndex = nextIndex;
       console.log("[AudioPlayer] Pre-buffered track", nextIndex);
     } catch (err) {
@@ -133,18 +147,14 @@ class AudioPlayerManager {
     });
 
     try {
-      // Remove previous player if it exists — prevents dual audio on Android
+      // Remove the old status listener BEFORE removing the player so stale
+      // playbackStatusUpdate events cannot trigger an unwanted next().
+      this.removeStatusListener();
+
+      // Remove previous player — prevents dual audio on Android
       if (this.player) {
-        try {
-          this.player.pause();
-        } catch {
-          /* ignore */
-        }
-        try {
-          this.player.remove();
-        } catch {
-          /* ignore */
-        }
+        try { this.player.pause(); } catch { /* ignore */ }
+        try { this.player.remove(); } catch { /* ignore */ }
         this.player = null;
       }
 
@@ -154,13 +164,16 @@ class AudioPlayerManager {
         this.player = this.nextPlayer;
         this.nextPlayer = null;
         this.nextTrackIndex = -1;
+        // Safety net: seek to 0 in case Android auto-played the buffered track
+        try { this.player.seekTo(0); } catch { /* ignore */ }
       } else {
         this.cleanupNextPlayer();
         const uri = track.localUri || track.audioUrl;
         this.player = createAudioPlayer(uri);
       }
 
-      this.player.addListener("playbackStatusUpdate", (status) => {
+      // Store the subscription so it can be removed on the next track change
+      this.statusSubscription = this.player.addListener("playbackStatusUpdate", (status) => {
         // Only update position/duration — never overwrite isPlaying from here
         this.updateState({
           positionMs: (status.currentTime || 0) * 1000,
@@ -215,6 +228,7 @@ class AudioPlayerManager {
   }
 
   async stop() {
+    this.removeStatusListener();
     if (this.player) {
       this.player.pause();
       this.player.remove();

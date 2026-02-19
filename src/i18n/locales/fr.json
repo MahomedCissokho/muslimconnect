@@ -114,7 +114,7 @@
     "qiblaBearing": "Direction",
     "compassUnavailable": "Capteur de boussole non disponible sur cet appareil",
     "qiblaAligned": "Qibla trouvée !",
-    "turnToQibla": "Tournez pour trouver la Qibla",
+    "turnToQibla": "Téléphone à plat · tournez jusqu'au vert → Qibla trouvée",
     "locationRequired": "Localisation requise",
     "enableLocation": "Veuillez activer les services de localisation pour obtenir les horaires de prière précis pour votre zone.",
     "fetchError": "Chargement impossible",
