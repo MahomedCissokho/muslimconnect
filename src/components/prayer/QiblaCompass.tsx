@@ -3,6 +3,7 @@ import { Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
+import { Magnetometer } from 'expo-sensors';
 
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from '../../constants';
 import { QIBLA_THRESHOLD } from './types';
@@ -36,13 +37,20 @@ export const QiblaCompass: React.FC<QiblaCompassProps> = ({
   const lastHapticTime = useRef(0);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // Use Location.watchHeadingAsync — gives the correct compass heading on both platforms.
-  // Prefer trueHeading (GPS-calibrated) when available, fall back to magHeading.
+  // 1. Check compass hardware with Magnetometer — if absent, show fallback with bearing.
+  // 2. If available, use Location.watchHeadingAsync which gives the correct heading.
   useEffect(() => {
     let sub: Location.LocationSubscription | null = null;
 
     const start = async () => {
       try {
+        // Gate: no magnetometer hardware → show fallback
+        const hasMagnetometer = await Magnetometer.isAvailableAsync();
+        if (!hasMagnetometer) {
+          setSensorAvailable(false);
+          return;
+        }
+
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setSensorAvailable(false);
