@@ -12,6 +12,14 @@ import {
     type AudioTrack,
     type PlaybackState,
 } from "../services/audio";
+import { settingsService } from "../services/settings";
+import { useSettings } from "./SettingsContext";
+import {
+    buildHizbPlaylist,
+    buildJuzPlaylist,
+    buildPagePlaylist,
+    buildSurahPlaylist,
+} from "../utils/playlistBuilder";
 
 interface AudioContextValue {
   playbackState: PlaybackState;
@@ -32,13 +40,47 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     audioPlayer.getState(),
   );
   const wasPlayingRef = useRef(false);
+  const { reciterId } = useSettings();
+  const prevReciterIdRef = useRef(reciterId);
 
   useEffect(() => {
     const unsubscribe = audioPlayer.subscribe(setPlaybackState);
     return unsubscribe;
   }, []);
 
-  // Auto-pause when app goes to background, remember state for resume
+  // Rebuild playlist when reciter changes while audio is active
+  useEffect(() => {
+    if (prevReciterIdRef.current === reciterId) return;
+    prevReciterIdRef.current = reciterId;
+
+    const state = audioPlayer.getState();
+    if (state.playlist.length === 0 || !state.currentTrack) return;
+
+    const origin = state.currentTrack.origin;
+    if (!origin) return;
+
+    let newPlaylist: AudioTrack[] = [];
+    if (origin.type === "surah") newPlaylist = buildSurahPlaylist(origin.id, reciterId);
+    if (origin.type === "juz") newPlaylist = buildJuzPlaylist(origin.id, reciterId);
+    if (origin.type === "hizb") newPlaylist = buildHizbPlaylist(origin.id, reciterId);
+    if (origin.type === "page") newPlaylist = buildPagePlaylist(origin.id, reciterId);
+
+    if (newPlaylist.length === 0) return;
+
+    const resumeIndex = Math.min(state.currentIndex, newPlaylist.length - 1);
+    audioPlayer.loadPlaylist(newPlaylist, resumeIndex);
+  }, [reciterId]);
+
+  // Stop playback when playlist reaches its boundary (first/last verse)
+  useEffect(() => {
+    audioPlayer.setOnPlaylistBoundary(async () => {
+      await audioPlayer.stop();
+    });
+
+    return () => audioPlayer.setOnPlaylistBoundary(null);
+  }, []);
+
+  // Auto-pause when app goes to background
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === "background" || nextAppState === "inactive") {
@@ -48,13 +90,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           audioPlayer.pause();
         }
       }
-      // Do NOT auto-resume — let the user tap play manually
     };
 
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange,
-    );
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
     return () => subscription.remove();
   }, []);
 

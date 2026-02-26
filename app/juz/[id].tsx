@@ -10,9 +10,9 @@ import { QuranGroupDetail } from "../../src/components/QuranGroupDetail";
 import { COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAudio } from "../../src/contexts/AudioContext";
 import {
-  getSurahsInRange,
-  getSurahTransliteration,
-  JUZ_LIST,
+    getSurahsInRange,
+    getSurahTransliteration,
+    JUZ_LIST,
 } from "../../src/data";
 
 export default function JuzDetailScreen() {

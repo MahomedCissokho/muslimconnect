@@ -10,10 +10,10 @@ import { QuranGroupDetail } from "../../src/components/QuranGroupDetail";
 import { COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAudio } from "../../src/contexts/AudioContext";
 import {
-  getSurahsInRange,
-  getSurahTransliteration,
-  PAGES,
-  SURAHS,
+    getSurahsInRange,
+    getSurahTransliteration,
+    PAGES,
+    SURAHS,
 } from "../../src/data";
 
 export default function PageDetailScreen() {

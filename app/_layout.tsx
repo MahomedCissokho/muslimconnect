@@ -24,13 +24,41 @@ import "../global.css";
 import { AudioPlayerBar } from "../src/components";
 import { supabase } from "../src/services/supabase";
 import { COLORS } from "../src/constants";
-import { AudioProvider } from "../src/contexts/AudioContext";
+import { AudioProvider, useAudio } from "../src/contexts/AudioContext";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { DownloadProvider } from "../src/contexts/DownloadContext";
 import { SettingsProvider } from "../src/contexts/SettingsContext";
 import "../src/i18n";
 
 SplashScreen.preventAutoHideAsync();
+
+// ─── Navigation content (hides audio bar on auth screen, stops on sign out) ──
+
+function NavigationContent() {
+  const { session } = useAuth();
+  const { stop } = useAudio();
+  const segments = useSegments();
+
+  const isAuthScreen = segments[0] === "auth";
+
+  useEffect(() => {
+    if (!session) {
+      stop();
+    }
+  }, [session, stop]);
+
+  return (
+    <View style={styles.appContainer}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="auth" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="settings" />
+      </Stack>
+      {!isAuthScreen && <AudioPlayerBar />}
+    </View>
+  );
+}
 
 // ─── Auth-aware navigator ──────────────────────────────────────────────────
 
@@ -179,15 +207,7 @@ export default function RootLayout() {
           <AudioProvider>
             <DownloadProvider>
               <AuthGate fontsLoaded={fontsLoaded} />
-              <View style={styles.appContainer}>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="auth" />
-                  <Stack.Screen name="(tabs)" />
-                  <Stack.Screen name="settings" />
-                </Stack>
-                <AudioPlayerBar />
-              </View>
+              <NavigationContent />
               <StatusBar style="light" backgroundColor={COLORS.primary} />
             </DownloadProvider>
           </AudioProvider>

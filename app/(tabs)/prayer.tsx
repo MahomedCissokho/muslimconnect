@@ -147,7 +147,7 @@ export default function PrayerScreen() {
       setError("fetch_failed");
       setLoading(false);
     }
-  }, []);
+  }, [t, i18n]);
 
   useEffect(() => {
     fetchPrayerData();

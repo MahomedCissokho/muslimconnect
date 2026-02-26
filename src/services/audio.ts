@@ -40,6 +40,8 @@ const INITIAL_STATE: PlaybackState = {
   currentIndex: -1,
 };
 
+type BoundaryCallback = (direction: 'next' | 'previous', origin?: AudioOrigin) => Promise<void> | void;
+
 class AudioPlayerManager {
   private player: ExpoAudioPlayer | null = null;
   private nextPlayer: ExpoAudioPlayer | null = null;
@@ -50,6 +52,11 @@ class AudioPlayerManager {
   private advancing = false;
   // Stored subscription so we can explicitly remove it before destroying the player
   private statusSubscription: { remove: () => void } | null = null;
+  private boundaryCallback: BoundaryCallback | null = null;
+
+  setOnPlaylistBoundary(cb: BoundaryCallback | null) {
+    this.boundaryCallback = cb;
+  }
 
   private async initialize() {
     if (this.initialized) return;
@@ -242,6 +249,8 @@ class AudioPlayerManager {
     const nextIndex = this.state.currentIndex + 1;
     if (nextIndex < this.state.playlist.length) {
       await this.playTrackAtIndex(nextIndex);
+    } else if (this.boundaryCallback) {
+      await this.boundaryCallback('next', this.state.currentTrack?.origin);
     } else {
       await this.stop();
     }
@@ -251,6 +260,8 @@ class AudioPlayerManager {
     const prevIndex = this.state.currentIndex - 1;
     if (prevIndex >= 0) {
       await this.playTrackAtIndex(prevIndex);
+    } else if (this.boundaryCallback) {
+      await this.boundaryCallback('previous', this.state.currentTrack?.origin);
     }
   }
 }

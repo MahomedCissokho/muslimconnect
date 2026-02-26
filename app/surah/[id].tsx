@@ -1,21 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  FlatList,
-  Image,
-  Share,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    FlatList,
+    Image,
+    Share,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -35,8 +35,8 @@ import { lastReadService } from "../../src/services/lastRead";
 import { quranService } from "../../src/services/quran";
 import type { Ayah, SurahData } from "../../src/types";
 import {
-  buildAudioUrl,
-  buildEveryayahAudioUrl,
+    buildAudioUrl,
+    buildEveryayahAudioUrl,
 } from "../../src/utils/audioUrl";
 
 interface AyahWithExtra extends Ayah {
@@ -841,18 +841,17 @@ const styles = StyleSheet.create({
   },
   ayahArabic: {
     color: COLORS.white,
-    fontSize: 20,
-    fontFamily: FONTS.arabic,
+    fontSize: 26,
+    fontFamily: FONTS.arabicBold,
     textAlign: "right",
-    lineHeight: 36,
+    lineHeight: 48,
     marginBottom: SPACING.lg,
   },
   ayahTransliteration: {
     color: COLORS.gold,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    fontStyle: "italic",
-    lineHeight: 22,
+    fontSize: 15,
+    fontFamily: FONTS.regular,
+    lineHeight: 24,
     marginBottom: SPACING.sm,
   },
   ayahTranslation: {

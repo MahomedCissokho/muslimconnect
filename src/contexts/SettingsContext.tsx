@@ -112,11 +112,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const setLanguage = useCallback(
-    async (lang: AppLanguage) => {
-      // Change i18n language FIRST (so t() is ready for the next render)
-      await i18n.changeLanguage(lang);
-      // Then update state to trigger re-render with correct translations
+    (lang: AppLanguage) => {
       setLanguageState(lang);
+      i18n.changeLanguage(lang);
       settingsService
         .setLanguage(lang)
         .catch((err) => console.warn("Failed to persist language:", err));

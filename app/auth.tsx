@@ -4,16 +4,16 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -44,12 +44,27 @@ export default function AuthScreen() {
     setError(null);
     Keyboard.dismiss();
     if (mode === "signUp") {
-      if (!fullName.trim()) { setError(t("auth.errorNameRequired")); return; }
-      if (!email.trim() || !password.trim()) { setError(t("auth.errorFieldsRequired")); return; }
-      if (password.length < 6) { setError(t("auth.errorPasswordLength")); return; }
-      if (password !== confirmPassword) { setError(t("auth.errorPasswordMatch")); return; }
+      if (!fullName.trim()) {
+        setError(t("auth.errorNameRequired"));
+        return;
+      }
+      if (!email.trim() || !password.trim()) {
+        setError(t("auth.errorFieldsRequired"));
+        return;
+      }
+      if (password.length < 6) {
+        setError(t("auth.errorPasswordLength"));
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError(t("auth.errorPasswordMatch"));
+        return;
+      }
     } else {
-      if (!email.trim() || !password.trim()) { setError(t("auth.errorFieldsRequired")); return; }
+      if (!email.trim() || !password.trim()) {
+        setError(t("auth.errorFieldsRequired"));
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -64,7 +79,11 @@ export default function AuthScreen() {
         const err = await signUp(email, password, fullName);
         if (err) {
           const lower = err.toLowerCase();
-          if (lower.includes("already") || lower.includes("registered") || lower.includes("exists")) {
+          if (
+            lower.includes("already") ||
+            lower.includes("registered") ||
+            lower.includes("exists")
+          ) {
             setError(t("auth.errorEmailExists"));
           } else {
             setError(err);
@@ -89,13 +108,15 @@ export default function AuthScreen() {
         />
 
         <SafeAreaView style={s.safe}>
-          <KeyboardAvoidingView style={s.kav} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <KeyboardAvoidingView
+            style={s.kav}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
             <ScrollView
               contentContainerStyle={s.scroll}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-
               {/* Logo */}
               <View style={s.logoArea}>
                 <View style={s.iconWrap}>
@@ -109,13 +130,19 @@ export default function AuthScreen() {
                 {mode === "signIn" ? t("auth.signIn") : t("auth.signUp")}
               </Text>
               <Text style={s.subtitle}>
-                {mode === "signIn" ? t("auth.signInSubtitle") : t("auth.signUpSubtitle")}
+                {mode === "signIn"
+                  ? t("auth.signInSubtitle")
+                  : t("auth.signUpSubtitle")}
               </Text>
 
               {/* Error */}
               {!!error && (
                 <View style={s.alertBox}>
-                  <Ionicons name="alert-circle-outline" size={15} color={COLORS.error} />
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={15}
+                    color={COLORS.error}
+                  />
                   <Text style={s.alertText}>{error}</Text>
                 </View>
               )}
@@ -123,7 +150,11 @@ export default function AuthScreen() {
               {/* Fields */}
               {mode === "signUp" && (
                 <View style={[s.field, focused === "name" && s.fieldFocused]}>
-                  <Ionicons name="person-outline" size={18} color={focused === "name" ? COLORS.gold : COLORS.gray600} />
+                  <Ionicons
+                    name="person-outline"
+                    size={18}
+                    color={focused === "name" ? COLORS.gold : COLORS.gray600}
+                  />
                   <TextInput
                     style={s.fieldInput}
                     placeholder={t("auth.fullName")}
@@ -138,7 +169,11 @@ export default function AuthScreen() {
               )}
 
               <View style={[s.field, focused === "email" && s.fieldFocused]}>
-                <Ionicons name="mail-outline" size={18} color={focused === "email" ? COLORS.gold : COLORS.gray600} />
+                <Ionicons
+                  name="mail-outline"
+                  size={18}
+                  color={focused === "email" ? COLORS.gold : COLORS.gray600}
+                />
                 <TextInput
                   style={s.fieldInput}
                   placeholder={t("auth.email")}
@@ -153,7 +188,11 @@ export default function AuthScreen() {
               </View>
 
               <View style={[s.field, focused === "pwd" && s.fieldFocused]}>
-                <Ionicons name="lock-closed-outline" size={18} color={focused === "pwd" ? COLORS.gold : COLORS.gray600} />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={18}
+                  color={focused === "pwd" ? COLORS.gold : COLORS.gray600}
+                />
                 <TextInput
                   style={[s.fieldInput, { flex: 1 }]}
                   placeholder={t("auth.password")}
@@ -166,14 +205,22 @@ export default function AuthScreen() {
                   onFocus={() => setFocused("pwd")}
                   onBlur={() => setFocused(null)}
                 />
-                <TouchableOpacity onPress={() => setShowPwd(v => !v)}>
-                  <Ionicons name={showPwd ? "eye-off-outline" : "eye-outline"} size={18} color={COLORS.gray600} />
+                <TouchableOpacity onPress={() => setShowPwd((v) => !v)}>
+                  <Ionicons
+                    name={showPwd ? "eye-off-outline" : "eye-outline"}
+                    size={18}
+                    color={COLORS.gray600}
+                  />
                 </TouchableOpacity>
               </View>
 
               {mode === "signUp" && (
                 <View style={[s.field, focused === "cpwd" && s.fieldFocused]}>
-                  <Ionicons name="lock-closed-outline" size={18} color={focused === "cpwd" ? COLORS.gold : COLORS.gray600} />
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={18}
+                    color={focused === "cpwd" ? COLORS.gold : COLORS.gray600}
+                  />
                   <TextInput
                     style={[s.fieldInput, { flex: 1 }]}
                     placeholder={t("auth.confirmPassword")}
@@ -186,23 +233,39 @@ export default function AuthScreen() {
                     onFocus={() => setFocused("cpwd")}
                     onBlur={() => setFocused(null)}
                   />
-                  <TouchableOpacity onPress={() => setShowPwd(v => !v)}>
-                    <Ionicons name={showPwd ? "eye-off-outline" : "eye-outline"} size={18} color={COLORS.gray600} />
+                  <TouchableOpacity onPress={() => setShowPwd((v) => !v)}>
+                    <Ionicons
+                      name={showPwd ? "eye-off-outline" : "eye-outline"}
+                      size={18}
+                      color={COLORS.gray600}
+                    />
                   </TouchableOpacity>
                 </View>
               )}
 
               {/* Submit */}
-              <TouchableOpacity onPress={handleSubmit} disabled={loading} activeOpacity={0.85} style={s.btn}>
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={loading}
+                activeOpacity={0.85}
+                style={s.btn}
+              >
                 <LinearGradient
-                  colors={loading ? [COLORS.gray700, COLORS.gray600] : [COLORS.gold, "#F59E0B"]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  colors={
+                    loading
+                      ? [COLORS.gray700, COLORS.gray600]
+                      : [COLORS.gold, "#F59E0B"]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                   style={s.btnGrad}
                 >
                   <Text style={s.btnText}>
                     {loading
                       ? "..."
-                      : mode === "signIn" ? t("auth.signIn") : t("auth.createAccount")}
+                      : mode === "signIn"
+                        ? t("auth.signIn")
+                        : t("auth.createAccount")}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -214,15 +277,23 @@ export default function AuthScreen() {
               {/* Switch mode link */}
               <View style={s.switchRow}>
                 <Text style={s.switchLabel}>
-                  {mode === "signIn" ? t("auth.noAccount") : t("auth.hasAccount")}
+                  {mode === "signIn"
+                    ? t("auth.noAccount")
+                    : t("auth.hasAccount")}
                 </Text>
-                <TouchableOpacity onPress={() => switchMode(mode === "signIn" ? "signUp" : "signIn")} activeOpacity={0.7}>
+                <TouchableOpacity
+                  onPress={() =>
+                    switchMode(mode === "signIn" ? "signUp" : "signIn")
+                  }
+                  activeOpacity={0.7}
+                >
                   <Text style={s.switchLink}>
-                    {mode === "signIn" ? t("auth.createAccount") : t("auth.signIn")}
+                    {mode === "signIn"
+                      ? t("auth.createAccount")
+                      : t("auth.signIn")}
                   </Text>
                 </TouchableOpacity>
               </View>
-
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -234,7 +305,7 @@ export default function AuthScreen() {
 const s = StyleSheet.create({
   root: { flex: 1 },
   safe: { flex: 1 },
-  kav:  { flex: 1 },
+  kav: { flex: 1 },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 24,

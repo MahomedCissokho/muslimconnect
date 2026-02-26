@@ -10,10 +10,10 @@ import { COLORS } from "../../src/constants/colors";
 import { FONTS, FONT_SIZES } from "../../src/constants/fonts";
 import { BORDER_RADIUS, SPACING } from "../../src/constants/spacing";
 import type {
-  AyahBookmark,
-  Bookmark,
-  DuaBookmark,
-  HadithBookmark,
+    AyahBookmark,
+    Bookmark,
+    DuaBookmark,
+    HadithBookmark,
 } from "../../src/services/bookmarks";
 import { bookmarkService } from "../../src/services/bookmarks";
 
@@ -323,7 +323,7 @@ export default function BookmarkScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={filtered}
         renderItem={renderItem}
