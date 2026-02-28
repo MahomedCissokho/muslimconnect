@@ -3,6 +3,7 @@ import React, {
     useCallback,
     useContext,
     useEffect,
+    useMemo,
     useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -129,6 +130,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     ): Promise<boolean> => {
       const lang = (i18n.language as AppLanguage) || "fr";
 
+      // Optimistic update: show the change immediately
+      setNotificationSettingsState((prev) => ({ ...prev, [key]: value }));
+
       try {
         let success = false;
 
@@ -154,11 +158,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
             break;
         }
 
-        if (success) {
-          setNotificationSettingsState((prev) => ({ ...prev, [key]: value }));
+        // Revert if the operation failed
+        if (!success) {
+          setNotificationSettingsState((prev) => ({ ...prev, [key]: !value }));
         }
         return success;
       } catch (error) {
+        // Revert on error
+        setNotificationSettingsState((prev) => ({ ...prev, [key]: !value }));
         console.warn(
           `[Settings] Failed to update notification setting ${key}:`,
           error,
@@ -169,20 +176,33 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     [i18n],
   );
 
+  const contextValue = useMemo(
+    () => ({
+      reciterId,
+      setReciterId,
+      displayOptions,
+      updateDisplayOption,
+      language,
+      setLanguage,
+      notificationSettings,
+      updateNotificationSetting,
+      isLoading,
+    }),
+    [
+      reciterId,
+      setReciterId,
+      displayOptions,
+      updateDisplayOption,
+      language,
+      setLanguage,
+      notificationSettings,
+      updateNotificationSetting,
+      isLoading,
+    ],
+  );
+
   return (
-    <SettingsContext.Provider
-      value={{
-        reciterId,
-        setReciterId,
-        displayOptions,
-        updateDisplayOption,
-        language,
-        setLanguage,
-        notificationSettings,
-        updateNotificationSetting,
-        isLoading,
-      }}
-    >
+    <SettingsContext.Provider value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );

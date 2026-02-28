@@ -208,16 +208,16 @@ export default function QuranScreen() {
       grad: ["#4F46E5", "#7C3AED"] as [string, string],
     },
     {
-      icon: "bookmark-outline" as const,
-      label: t("tabs.bookmark"),
-      route: "/(tabs)/bookmark",
-      grad: ["#F9BD64", "#D97706"] as [string, string],
-    },
-    {
       icon: "heart-outline" as const,
       label: t("tabs.duas"),
       route: "/(tabs)/duas",
       grad: ["#10B981", "#059669"] as [string, string],
+    },
+    {
+      icon: "star-outline" as const,
+      label: t("allahNames.shortTitle", { defaultValue: "99 Noms" }),
+      route: "/allah-names",
+      grad: ["#E11D48", "#F43F5E"] as [string, string],
     },
     {
       icon: "library-outline" as const,

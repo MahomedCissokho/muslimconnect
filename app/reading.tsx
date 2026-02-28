@@ -10,8 +10,8 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    FlatList,
     Image,
+    ScrollView,
     Share,
     StyleSheet,
     Text,
@@ -54,7 +54,7 @@ interface AyahWithExtra extends Ayah {
   audioUrl?: string;
 }
 
-/** A row in the FlatList — either a surah separator or an ayah */
+/** A row in the list — either a surah separator or an ayah */
 type ListItem =
   | { kind: "header"; surah: SurahInGroup; key: string }
   | {
@@ -89,6 +89,7 @@ export default function ReadingScreen() {
   const { reciterId, displayOptions } = useSettings();
   const { playbackState, loadPlaylist, pause, resume, stop } = useAudio();
 
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [listItems, setListItems] = useState<ListItem[]>([]);
@@ -97,9 +98,7 @@ export default function ReadingScreen() {
     new Set(),
   );
 
-  const flatListRef = useRef<FlatList<ListItem>>(null);
-  const scrollRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingScrollIndex = useRef<number>(-1);
+  const scrollViewRef = useRef<ScrollView>(null);
   const autoPlayFired = useRef(false);
 
   // ── Derive origin for audio tagging ───────────
@@ -342,86 +341,28 @@ export default function ReadingScreen() {
 
   const isPausedAll = playbackState.isPaused && isThisGroupActive;
 
-  // ── Auto-scroll ────────────────────────────────
-  const clearPendingScroll = useCallback(() => {
-    if (scrollRetryRef.current) {
-      clearTimeout(scrollRetryRef.current);
-      scrollRetryRef.current = null;
-    }
+  // ── Auto-scroll: store y positions from onLayout, scroll on track change ────
+  const ayahPositions = useRef<Record<number, number>>({});
+  const lastScrolledTrack = useRef<number | null>(null);
+
+  const handleAyahLayout = useCallback((globalAyahNumber: number, y: number) => {
+    ayahPositions.current[globalAyahNumber] = y;
   }, []);
-
-  const scrollToIndex = useCallback(
-    (targetIndex: number) => {
-      if (
-        !flatListRef.current ||
-        targetIndex < 0 ||
-        targetIndex >= listItems.length
-      )
-        return;
-
-      clearPendingScroll();
-      pendingScrollIndex.current = targetIndex;
-
-      flatListRef.current.scrollToIndex({
-        index: targetIndex,
-        animated: true,
-        viewPosition: 0.4,
-      });
-    },
-    [listItems.length, clearPendingScroll],
-  );
-
-  const onScrollToIndexFailed = useCallback(
-    (info: {
-      index: number;
-      highestMeasuredFrameIndex: number;
-      averageItemLength: number;
-    }) => {
-      clearPendingScroll();
-      const safeIndex = Math.max(0, info.highestMeasuredFrameIndex);
-      flatListRef.current?.scrollToIndex({
-        index: safeIndex,
-        animated: false,
-      });
-      scrollRetryRef.current = setTimeout(() => {
-        if (pendingScrollIndex.current >= 0) {
-          flatListRef.current?.scrollToIndex({
-            index: pendingScrollIndex.current,
-            animated: true,
-            viewPosition: 0.4,
-          });
-        }
-      }, 200);
-    },
-    [clearPendingScroll],
-  );
 
   useEffect(() => {
     const track = playbackState.currentTrack;
     if (!track || !isThisGroupActive) return;
+    if (lastScrolledTrack.current === track.globalAyahNumber) return;
 
-    const idx = listItems.findIndex(
-      (item) =>
-        item.kind === "ayah" && item.ayah.number === track.globalAyahNumber,
-    );
-    if (idx < 0) return;
-
-    const timer = setTimeout(() => scrollToIndex(idx), 150);
-    return () => {
-      clearTimeout(timer);
-      clearPendingScroll();
-    };
-  }, [
-    playbackState.currentTrack,
-    isThisGroupActive,
-    listItems,
-    scrollToIndex,
-    clearPendingScroll,
-  ]);
-
-  useEffect(() => {
-    return () => clearPendingScroll();
-  }, [clearPendingScroll]);
+    const y = ayahPositions.current[track.globalAyahNumber];
+    if (y !== undefined) {
+      lastScrolledTrack.current = track.globalAyahNumber;
+      scrollViewRef.current?.scrollTo({
+        y: Math.max(0, y - 120),
+        animated: true,
+      });
+    }
+  }, [playbackState.currentTrack, isThisGroupActive]);
 
   // ── Playback handlers ─────────────────────────
   const handlePlayAll = async () => {
@@ -574,122 +515,112 @@ export default function ReadingScreen() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        ref={flatListRef}
-        data={listItems}
-        keyExtractor={(item) => item.key}
-        extraData={{
-          currentTrack: playbackState.currentTrack?.globalAyahNumber,
-          bookmarkedAyahs,
-        }}
+      <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         style={styles.flatList}
-        windowSize={21}
-        maxToRenderPerBatch={15}
-        initialNumToRender={12}
-        onScrollToIndexFailed={onScrollToIndexFailed}
-        ListHeaderComponent={
-          /* ── Hero card ── */
-          <View style={styles.heroOuter}>
-            <LinearGradient
-              colors={["#863AE8", "#672CBC", "#4A1D96"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.heroGradient}
-            >
-              <View style={styles.deco1} />
-              <View style={styles.deco2} />
-              <View style={styles.deco3} />
+        contentContainerStyle={styles.listPadding}
+      >
+        {/* ── Hero card ── */}
+        <View style={styles.heroOuter}>
+          <LinearGradient
+            colors={["#863AE8", "#672CBC", "#4A1D96"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroGradient}
+          >
+            <View style={styles.deco1} />
+            <View style={styles.deco2} />
+            <View style={styles.deco3} />
 
-              <View style={styles.heroContent}>
-                <View style={styles.iconCircle}>
-                  <Ionicons
-                    name={groupIcon as any}
-                    size={26}
-                    color={COLORS.primary}
-                  />
+            <View style={styles.heroContent}>
+              <View style={styles.iconCircle}>
+                <Ionicons
+                  name={groupIcon as any}
+                  size={26}
+                  color={COLORS.primary}
+                />
+              </View>
+
+              <Text style={styles.heroTitle}>{headerTitle}</Text>
+              <Text style={styles.heroSubtitle}>{subtitle}</Text>
+
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{surahs.length}</Text>
+                  <Text style={styles.statLabel}>{t("common.surahs")}</Text>
                 </View>
-
-                <Text style={styles.heroTitle}>{headerTitle}</Text>
-                <Text style={styles.heroSubtitle}>{subtitle}</Text>
-
-                {/* Stats */}
-                <View style={styles.statsRow}>
-                  <View style={styles.statBox}>
-                    <Text style={styles.statValue}>{surahs.length}</Text>
-                    <Text style={styles.statLabel}>{t("common.surahs")}</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statBox}>
-                    <Text style={styles.statValue}>{totalVerses}</Text>
-                    <Text style={styles.statLabel}>{t("common.verses")}</Text>
-                  </View>
-                </View>
-
-                {/* Play All / Pause / Stop */}
-                <View style={styles.playAllRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.playAllButton,
-                      isPlayingAll &&
-                        !playbackState.isLoading &&
-                        styles.playAllButtonActive,
-                    ]}
-                    onPress={handlePlayAll}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons
-                      name={
-                        playbackState.isLoading && isThisGroupActive
-                          ? "hourglass-outline"
-                          : isPlayingAll && !isPausedAll
-                            ? "pause"
-                            : "play"
-                      }
-                      size={20}
-                      color={
-                        isPlayingAll && !playbackState.isLoading
-                          ? COLORS.white
-                          : COLORS.primary
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.playAllText,
-                        isPlayingAll &&
-                          !playbackState.isLoading &&
-                          styles.playAllTextActive,
-                      ]}
-                    >
-                      {playbackState.isLoading && isThisGroupActive
-                        ? t("common.loading")
-                        : isPlayingAll && !isPausedAll
-                          ? t("audio.pause")
-                          : isPausedAll
-                            ? t("audio.resume")
-                            : t("quran.playAll")}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {isPlayingAll &&
-                    !(playbackState.isLoading && isThisGroupActive) && (
-                      <TouchableOpacity
-                        style={styles.stopButton}
-                        onPress={handleStopAll}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="stop" size={18} color="#FF6B6B" />
-                        <Text style={styles.stopText}>
-                          {t("audio.stopAudio")}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
+                <View style={styles.statDivider} />
+                <View style={styles.statBox}>
+                  <Text style={styles.statValue}>{totalVerses}</Text>
+                  <Text style={styles.statLabel}>{t("common.verses")}</Text>
                 </View>
               </View>
-            </LinearGradient>
-          </View>
-        }
-        renderItem={({ item }) => {
+
+              <View style={styles.playAllRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.playAllButton,
+                    isPlayingAll &&
+                      !playbackState.isLoading &&
+                      styles.playAllButtonActive,
+                  ]}
+                  onPress={handlePlayAll}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name={
+                      playbackState.isLoading && isThisGroupActive
+                        ? "hourglass-outline"
+                        : isPlayingAll && !isPausedAll
+                          ? "pause"
+                          : "play"
+                    }
+                    size={20}
+                    color={
+                      isPlayingAll && !playbackState.isLoading
+                        ? COLORS.white
+                        : COLORS.primary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.playAllText,
+                      isPlayingAll &&
+                        !playbackState.isLoading &&
+                        styles.playAllTextActive,
+                    ]}
+                  >
+                    {playbackState.isLoading && isThisGroupActive
+                      ? t("common.loading")
+                      : isPlayingAll && !isPausedAll
+                        ? t("audio.pause")
+                        : isPausedAll
+                          ? t("audio.resume")
+                          : t("quran.playAll")}
+                  </Text>
+                </TouchableOpacity>
+
+                {isPlayingAll &&
+                  !(playbackState.isLoading && isThisGroupActive) && (
+                    <TouchableOpacity
+                      style={styles.stopButton}
+                      onPress={handleStopAll}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="stop" size={18} color="#FF6B6B" />
+                      <Text style={styles.stopText}>
+                        {t("audio.stopAudio")}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* ── List items ── */}
+        {listItems.map((item) => {
           if (item.kind === "header") {
             const surah = item.surah;
             const isComplete =
@@ -704,6 +635,7 @@ export default function ReadingScreen() {
 
             return (
               <TouchableOpacity
+                key={item.key}
                 style={styles.surahSeparator}
                 activeOpacity={0.7}
                 onPress={() =>
@@ -744,6 +676,8 @@ export default function ReadingScreen() {
 
           return (
             <View
+              key={item.key}
+              onLayout={(e) => handleAyahLayout(ayah.number, e.nativeEvent.layout.y)}
               style={[
                 styles.ayahContainer,
                 isPlayingThis && styles.ayahContainerActive,
@@ -819,9 +753,8 @@ export default function ReadingScreen() {
               ) : null}
             </View>
           );
-        }}
-        contentContainerStyle={styles.listPadding}
-      />
+        })}
+      </ScrollView>
     </SafeAreaView>
   );
 }

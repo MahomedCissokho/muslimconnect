@@ -53,6 +53,7 @@ export default function SettingsScreen() {
     router.replace("/auth" as any);
   };
 
+  const [localLang, setLocalLang] = useState(language);
   const [reciterModalVisible, setReciterModalVisible] = useState(false);
   const [notifSettings, setNotifSettings] = useState<NotificationSettings>(
     DEFAULT_NOTIFICATION_SETTINGS,
@@ -89,6 +90,11 @@ export default function SettingsScreen() {
       .then((ok) => {
         if (!ok) console.warn("[Settings] Evening adhkar: permission denied");
       });
+  };
+
+  const handleLanguageChange = (lang: "fr" | "en") => {
+    setLocalLang(lang);
+    setTimeout(() => setLanguage(lang), 0);
   };
 
   const currentReciter = RECITERS.find((r) => r.id === reciterId);
@@ -193,14 +199,14 @@ export default function SettingsScreen() {
             <TouchableOpacity
               style={[
                 styles.langBtn,
-                language === "fr" && styles.langBtnActive,
+                localLang === "fr" && styles.langBtnActive,
               ]}
-              onPress={() => setLanguage("fr")}
+              onPress={() => handleLanguageChange("fr")}
             >
               <Text
                 style={[
                   styles.langText,
-                  language === "fr" && styles.langTextActive,
+                  localLang === "fr" && styles.langTextActive,
                 ]}
               >
                 Français
@@ -210,14 +216,14 @@ export default function SettingsScreen() {
             <TouchableOpacity
               style={[
                 styles.langBtn,
-                language === "en" && styles.langBtnActive,
+                localLang === "en" && styles.langBtnActive,
               ]}
-              onPress={() => setLanguage("en")}
+              onPress={() => handleLanguageChange("en")}
             >
               <Text
                 style={[
                   styles.langText,
-                  language === "en" && styles.langTextActive,
+                  localLang === "en" && styles.langTextActive,
                 ]}
               >
                 English

@@ -80,10 +80,4 @@ const styles = StyleSheet.create({
   thumbActive: {
     alignSelf: "flex-end",
   },
-  containerDisabled: {
-    opacity: 0.5,
-  },
-  labelDisabled: {
-    opacity: 0.7,
-  },
 });

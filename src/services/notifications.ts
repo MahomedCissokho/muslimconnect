@@ -239,7 +239,6 @@ export const notificationService = {
       });
     }
 
-    console.log("[Notifications] Prayer notifications scheduled");
   },
 
   // ---- Schedule morning adhkar ----
@@ -262,7 +261,6 @@ export const notificationService = {
       },
     });
 
-    console.log("[Notifications] Morning adhkar scheduled at 06:30");
   },
 
   // ---- Schedule evening adhkar ----
@@ -285,7 +283,6 @@ export const notificationService = {
       },
     });
 
-    console.log("[Notifications] Evening adhkar scheduled at 20:30");
   },
 
   // ---- Master setup: call after prayer times are fetched ----

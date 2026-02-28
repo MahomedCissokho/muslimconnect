@@ -120,7 +120,7 @@ class AudioPlayerManager {
       // (which would cause it to be at the end by the time we actually want it).
       try { this.nextPlayer.pause(); } catch { /* ignore */ }
       this.nextTrackIndex = nextIndex;
-      console.log("[AudioPlayer] Pre-buffered track", nextIndex);
+      // pre-buffered track nextIndex
     } catch (err) {
       console.error("[AudioPlayer] Error preloading next track:", err);
       this.nextPlayer = null;
@@ -167,7 +167,7 @@ class AudioPlayerManager {
 
       // Use pre-buffered player if available for this index
       if (this.nextPlayer && this.nextTrackIndex === index) {
-        console.log("[AudioPlayer] Using pre-buffered player for track", index);
+        // using pre-buffered player for track index
         this.player = this.nextPlayer;
         this.nextPlayer = null;
         this.nextTrackIndex = -1;
@@ -181,24 +181,28 @@ class AudioPlayerManager {
 
       // Store the subscription so it can be removed on the next track change
       this.statusSubscription = this.player.addListener("playbackStatusUpdate", (status) => {
-        // Only update position/duration — never overwrite isPlaying from here
-        this.updateState({
-          positionMs: (status.currentTime || 0) * 1000,
-          durationMs: (status.duration || 0) * 1000,
-        });
-
-        // Auto-advance when track finishes
-        if (
-          !this.advancing &&
-          status.currentTime > 0 &&
-          status.duration > 0 &&
-          status.currentTime >= status.duration - 0.3 &&
-          !status.playing
-        ) {
-          this.advancing = true;
-          this.next().finally(() => {
-            this.advancing = false;
+        try {
+          // Only update position/duration — never overwrite isPlaying from here
+          this.updateState({
+            positionMs: (status.currentTime || 0) * 1000,
+            durationMs: (status.duration || 0) * 1000,
           });
+
+          // Auto-advance when track finishes
+          if (
+            !this.advancing &&
+            status.currentTime > 0 &&
+            status.duration > 0 &&
+            status.currentTime >= status.duration - 0.3 &&
+            !status.playing
+          ) {
+            this.advancing = true;
+            this.next().finally(() => {
+              this.advancing = false;
+            });
+          }
+        } catch {
+          // Session lookup can fail when app is in background
         }
       });
 
@@ -215,30 +219,42 @@ class AudioPlayerManager {
 
   async play() {
     if (this.player) {
-      this.player.play();
-      this.updateState({ isPlaying: true, isPaused: false });
+      try {
+        this.player.play();
+        this.updateState({ isPlaying: true, isPaused: false });
+      } catch (e) {
+        // Session lookup can fail when app is in background
+      }
     }
   }
 
   async pause() {
     if (this.player) {
-      this.player.pause();
-      this.updateState({ isPlaying: false, isPaused: true });
+      try {
+        this.player.pause();
+        this.updateState({ isPlaying: false, isPaused: true });
+      } catch (e) {
+        // Session lookup can fail when app is in background
+      }
     }
   }
 
   async resume() {
     if (this.player && this.state.isPaused) {
-      this.player.play();
-      this.updateState({ isPlaying: true, isPaused: false });
+      try {
+        this.player.play();
+        this.updateState({ isPlaying: true, isPaused: false });
+      } catch (e) {
+        // Session lookup can fail when app is in background
+      }
     }
   }
 
   async stop() {
     this.removeStatusListener();
     if (this.player) {
-      this.player.pause();
-      this.player.remove();
+      try { this.player.pause(); } catch { /* ignore */ }
+      try { this.player.remove(); } catch { /* ignore */ }
       this.player = null;
     }
     this.cleanupNextPlayer();

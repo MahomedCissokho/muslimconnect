@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -77,6 +78,15 @@ export default function PrayerScreen() {
   const [countdown, setCountdown] = useState("00:00:00");
   const [qiblaBearing, setQiblaBearing] = useState(0);
   const [hasLocation, setHasLocation] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
+
+  // Track tab focus to pause/resume Qibla compass subscription & haptics
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
 
   const fetchPrayerData = useCallback(async () => {
     try {
@@ -276,6 +286,11 @@ export default function PrayerScreen() {
             unavailableLabel={t("prayer.compassUnavailable")}
             alignedLabel={t("prayer.qiblaAligned")}
             turnLabel={t("prayer.turnToQibla")}
+            turnRightLabel={t("prayer.turnRight")}
+            turnLeftLabel={t("prayer.turnLeft")}
+            degreesAwayLabel={(deg: number) => t("prayer.degreesAway", { degrees: deg })}
+            almostThereLabel={t("prayer.almostThere")}
+            isActive={isFocused}
           />
         )}
 

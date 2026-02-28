@@ -82,12 +82,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   // Auto-pause when app goes to background
   useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === "background" || nextAppState === "inactive") {
         const currentState = audioPlayer.getState();
         if (currentState.isPlaying) {
           wasPlayingRef.current = true;
-          audioPlayer.pause();
+          try {
+            await audioPlayer.pause();
+          } catch {
+            // Session lookup can fail when app transitions to background
+          }
         }
       }
     };
