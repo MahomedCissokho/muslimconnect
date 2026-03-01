@@ -54,6 +54,7 @@ function NavigationContent() {
         <Stack.Screen name="auth" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="course-register" />
       </Stack>
       {!isAuthScreen && <AudioPlayerBar />}
     </View>

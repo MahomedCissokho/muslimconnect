@@ -9,7 +9,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -108,9 +107,9 @@ export default function FlashcardsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <Pressable onPress={() => router.back()}>
             <Image source={backIcon} style={styles.headerIcon} resizeMode="contain" />
-          </TouchableOpacity>
+          </Pressable>
           <Text style={styles.headerTitle}>
             {t("allahNames.flashcards", { defaultValue: "Flashcards" })}
           </Text>
@@ -121,11 +120,11 @@ export default function FlashcardsScreen() {
           <Text style={styles.emptyTitle}>
             {lang === "fr" ? "Bravo ! Tous appris !" : "Great! All learned!"}
           </Text>
-          <TouchableOpacity style={styles.emptyButton} onPress={toggleFilter}>
+          <Pressable style={styles.emptyButton} onPress={toggleFilter}>
             <Text style={styles.emptyButtonText}>
               {t("allahNames.allNames", { defaultValue: "Voir tous" })}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </SafeAreaView>
     );
@@ -135,9 +134,9 @@ export default function FlashcardsScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <Pressable onPress={() => router.back()}>
           <Image source={backIcon} style={styles.headerIcon} resizeMode="contain" />
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.headerTitle}>
           {t("allahNames.flashcards", { defaultValue: "Flashcards" })}
         </Text>
@@ -185,8 +184,7 @@ export default function FlashcardsScreen() {
             { transform: [{ scale: scaleAnim }] },
           ]}
         >
-          <TouchableOpacity
-            activeOpacity={0.9}
+          <Pressable
             onPress={handleReveal}
             style={styles.cardTouchable}
           >
@@ -224,7 +222,7 @@ export default function FlashcardsScreen() {
                 </View>
               )}
             </LinearGradient>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       </View>
 
@@ -232,15 +230,15 @@ export default function FlashcardsScreen() {
       <View style={styles.actionsRow}>
         {revealed ? (
           <>
-            <TouchableOpacity
+            <Pressable
               style={styles.stillLearningBtn}
               onPress={handleStillLearning}
             >
               <Text style={styles.stillLearningText}>
                 {t("allahNames.stillLearning", { defaultValue: "En cours" })}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.knowThisBtn} onPress={handleKnowThis}>
+            </Pressable>
+            <Pressable style={styles.knowThisBtn} onPress={handleKnowThis}>
               <LinearGradient
                 colors={["#10B981", "#059669"]}
                 style={styles.knowThisGradient}
@@ -250,11 +248,11 @@ export default function FlashcardsScreen() {
                   {t("allahNames.iKnowThis", { defaultValue: "Je connais" })}
                 </Text>
               </LinearGradient>
-            </TouchableOpacity>
+            </Pressable>
           </>
         ) : (
           <View style={styles.navArrows}>
-            <TouchableOpacity
+            <Pressable
               style={[styles.arrowBtn, currentIndex === 0 && styles.arrowBtnDisabled]}
               onPress={handlePrev}
               disabled={currentIndex === 0}
@@ -264,8 +262,8 @@ export default function FlashcardsScreen() {
                 size={24}
                 color={currentIndex > 0 ? COLORS.white : COLORS.gray600}
               />
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={[styles.arrowBtn, currentIndex >= deck.length - 1 && styles.arrowBtnDisabled]}
               onPress={handleNext}
               disabled={currentIndex >= deck.length - 1}
@@ -275,7 +273,7 @@ export default function FlashcardsScreen() {
                 size={24}
                 color={currentIndex < deck.length - 1 ? COLORS.white : COLORS.gray600}
               />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
       </View>
@@ -377,7 +375,7 @@ const styles = StyleSheet.create({
   cardGradient: {
     padding: SPACING["3xl"],
     alignItems: "center",
-    minHeight: 320,
+    minHeight: 0,
     justifyContent: "center",
   },
   cardNumberBadge: {
@@ -447,7 +445,8 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: "row",
     paddingHorizontal: SPACING["2xl"],
-    paddingBottom: SPACING["4xl"],
+    paddingBottom: SPACING["5xl"],
+    marginBottom: SPACING["3xl"],
     paddingTop: SPACING.lg,
     gap: SPACING.md,
   },

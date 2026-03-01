@@ -115,6 +115,7 @@ export default function QuranScreen() {
   const headerAnim = useRef(new Animated.Value(0)).current;
   const greetAnim = useRef(new Animated.Value(0)).current;
   const heroAnim = useRef(new Animated.Value(0)).current;
+  const bannerAnim = useRef(new Animated.Value(0)).current;
   const actionsAnim = useRef(new Animated.Value(0)).current;
   const statsAnim = useRef(new Animated.Value(0)).current;
   const tabsAnim = useRef(new Animated.Value(0)).current;
@@ -125,6 +126,7 @@ export default function QuranScreen() {
       .get()
       .then(setLastRead)
       .catch(() => {});
+
   }, []);
 
   // Reload whenever the tab regains focus (e.g. user navigated away and came back)
@@ -157,6 +159,12 @@ export default function QuranScreen() {
         friction: 9,
         useNativeDriver: true,
       }),
+      Animated.spring(bannerAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 9,
+        useNativeDriver: true,
+      }),
       Animated.spring(actionsAnim, {
         toValue: 1,
         tension: 50,
@@ -176,7 +184,7 @@ export default function QuranScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [actionsAnim, greetAnim, headerAnim, heroAnim, statsAnim, tabsAnim]);
+  }, [actionsAnim, bannerAnim, greetAnim, headerAnim, heroAnim, statsAnim, tabsAnim]);
 
   const lastReadSurah = lastRead
     ? SURAHS.find((s) => s.number === lastRead.surahNumber)
@@ -481,6 +489,69 @@ export default function QuranScreen() {
                 />
               </LinearGradient>
             </TouchableOpacity>
+          </Animated.View>
+
+          {/* ── Course Registration Banner ── */}
+          <Animated.View
+            style={[styles.bannerWrap, entrance(bannerAnim, 28)]}
+          >
+            <Pressable onPress={() => router.push("/course-register" as any)}>
+              <LinearGradient
+                colors={["#10B981", "#059669", "#047857"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.bannerGrad}
+              >
+                <View
+                  style={[
+                    styles.decoRing,
+                    {
+                      width: 100,
+                      height: 100,
+                      top: -30,
+                      right: -20,
+                      borderColor: "rgba(255,255,255,0.08)",
+                    },
+                  ]}
+                />
+                <View style={styles.bannerContent}>
+                  <View style={styles.bannerBadge}>
+                    <Ionicons name="school-outline" size={11} color="#fff" />
+                    <Text style={styles.bannerBadgeText}>
+                      {new Date().getMonth() >= 1 && new Date().getMonth() <= 2
+                        ? t("courseRegister.bannerSubtitle")
+                        : t("courseRegister.bannerNextSession")}
+                    </Text>
+                  </View>
+                  <Text style={styles.bannerTitle}>
+                    {t("courseRegister.bannerTitle")}
+                  </Text>
+                  <Text style={styles.bannerDesc}>
+                    {t("courseRegister.bannerDesc")}
+                  </Text>
+                  <View style={styles.bannerCtaWrap}>
+                    <LinearGradient
+                      colors={[COLORS.gold, "#F59E0B"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.bannerCta}
+                    >
+                      <Text style={styles.bannerCtaTxt}>
+                        {t("courseRegister.bannerCta")}
+                      </Text>
+                      <Ionicons
+                        name="arrow-forward"
+                        size={13}
+                        color={COLORS.primary}
+                      />
+                    </LinearGradient>
+                  </View>
+                </View>
+                <View style={styles.bannerIconWrap}>
+                  <Ionicons name="school" size={44} color="rgba(255,255,255,0.15)" />
+                </View>
+              </LinearGradient>
+            </Pressable>
           </Animated.View>
 
           {/* ── Quick Actions Row ── */}
@@ -922,6 +993,78 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontFamily: FONTS.bold,
     fontSize: 11,
+  },
+
+  // Banner
+  bannerWrap: {
+    paddingHorizontal: SPACING["2xl"],
+    marginBottom: SPACING.xl,
+  },
+  bannerGrad: {
+    borderRadius: 20,
+    padding: SPACING.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    shadowColor: "#10B981",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  bannerContent: { flex: 1, zIndex: 2 },
+  bannerBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: BORDER_RADIUS.full,
+    alignSelf: "flex-start",
+    marginBottom: SPACING.sm,
+  },
+  bannerBadgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontFamily: FONTS.semiBold,
+    letterSpacing: 0.3,
+  },
+  bannerTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+    marginBottom: 4,
+    lineHeight: 22,
+  },
+  bannerDesc: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    fontFamily: FONTS.regular,
+    marginBottom: SPACING.md,
+    lineHeight: 16,
+  },
+  bannerCtaWrap: {
+    alignSelf: "flex-start",
+    borderRadius: BORDER_RADIUS.full,
+    overflow: "hidden",
+  },
+  bannerCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  bannerCtaTxt: {
+    color: COLORS.primary,
+    fontSize: 11,
+    fontFamily: FONTS.bold,
+  },
+  bannerIconWrap: {
+    position: "absolute",
+    right: 16,
+    zIndex: 1,
   },
 
   // Footer
