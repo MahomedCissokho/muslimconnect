@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { COLORS, FONTS, SPACING } from "../constants";
 
@@ -17,10 +17,9 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   description,
 }) => {
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.container}
       onPress={() => onToggle(!value)}
-      activeOpacity={0.7}
     >
       <View style={styles.labelContainer}>
         <Text style={styles.label}>{label}</Text>
@@ -30,7 +29,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <View style={[styles.track, value && styles.trackActive]}>
         <View style={[styles.thumb, value && styles.thumbActive]} />
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

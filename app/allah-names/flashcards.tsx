@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -145,22 +146,22 @@ export default function FlashcardsScreen() {
 
       {/* Filter toggle */}
       <View style={styles.filterRow}>
-        <TouchableOpacity
+        <Pressable
           style={[styles.filterBtn, !showUnlearnedOnly && styles.filterBtnActive]}
           onPress={() => { setShowUnlearnedOnly(false); setCurrentIndex(0); setRevealed(false); }}
         >
           <Text style={[styles.filterText, !showUnlearnedOnly && styles.filterTextActive]}>
             {t("allahNames.allNames", { defaultValue: "Tous" })}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
+        </Pressable>
+        <Pressable
           style={[styles.filterBtn, showUnlearnedOnly && styles.filterBtnActive]}
           onPress={() => { setShowUnlearnedOnly(true); setCurrentIndex(0); setRevealed(false); }}
         >
           <Text style={[styles.filterText, showUnlearnedOnly && styles.filterTextActive]}>
             {t("allahNames.unlearnedOnly", { defaultValue: "Non appris" })}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Progress */}

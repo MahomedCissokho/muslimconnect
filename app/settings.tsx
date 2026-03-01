@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     Image,
+    InteractionManager,
+    Modal,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -58,11 +61,18 @@ export default function SettingsScreen() {
   const [notifSettings, setNotifSettings] = useState<NotificationSettings>(
     DEFAULT_NOTIFICATION_SETTINGS,
   );
+  const [morningTime, setMorningTime] = useState({ hour: 6, minute: 30 });
+  const [eveningTime, setEveningTime] = useState({ hour: 20, minute: 30 });
+  const [timePickerTarget, setTimePickerTarget] = useState<"morning" | "evening" | null>(null);
+  const [pickerHour, setPickerHour] = useState(6);
+  const [pickerMinute, setPickerMinute] = useState(30);
 
   const lang = (i18n.language === "en" ? "en" : "fr") as "fr" | "en";
 
   useEffect(() => {
     notificationService.getSettings().then(setNotifSettings);
+    notificationService.getMorningAdhkarTime().then(setMorningTime);
+    notificationService.getEveningAdhkarTime().then(setEveningTime);
   }, []);
 
   const handleTogglePrayerNotif = (enabled: boolean) => {
@@ -92,9 +102,42 @@ export default function SettingsScreen() {
       });
   };
 
-  const handleLanguageChange = (lang: "fr" | "en") => {
-    setLocalLang(lang);
-    setTimeout(() => setLanguage(lang), 0);
+  const handleLanguageChange = (newLang: "fr" | "en") => {
+    setLocalLang(newLang);
+    InteractionManager.runAfterInteractions(() => {
+      setLanguage(newLang);
+    });
+  };
+
+  const formatTime = (h: number, m: number) =>
+    `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+
+  const openTimePicker = (target: "morning" | "evening") => {
+    const time = target === "morning" ? morningTime : eveningTime;
+    setPickerHour(time.hour);
+    setPickerMinute(time.minute);
+    setTimePickerTarget(target);
+  };
+
+  const confirmTimePicker = () => {
+    if (!timePickerTarget) return;
+    const newTime = { hour: pickerHour, minute: pickerMinute };
+    if (timePickerTarget === "morning") {
+      setMorningTime(newTime);
+      if (notifSettings.morningAdhkar) {
+        notificationService.scheduleMorningAdhkar(lang, pickerHour, pickerMinute);
+      } else {
+        notificationService.setMorningAdhkarTime(pickerHour, pickerMinute);
+      }
+    } else {
+      setEveningTime(newTime);
+      if (notifSettings.eveningAdhkar) {
+        notificationService.scheduleEveningAdhkar(lang, pickerHour, pickerMinute);
+      } else {
+        notificationService.setEveningAdhkarTime(pickerHour, pickerMinute);
+      }
+    }
+    setTimePickerTarget(null);
   };
 
   const currentReciter = RECITERS.find((r) => r.id === reciterId);
@@ -136,11 +179,6 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>{t("settings.display")}</Text>
 
           <ToggleSwitch
-            label={t("settings.showArabic")}
-            value={displayOptions.showArabic}
-            onToggle={(v) => updateDisplayOption("showArabic", v)}
-          />
-          <ToggleSwitch
             label={t("settings.showTransliteration")}
             value={displayOptions.showTransliteration}
             onToggle={(v) => updateDisplayOption("showTransliteration", v)}
@@ -179,16 +217,38 @@ export default function SettingsScreen() {
           />
           <ToggleSwitch
             label={t("settings.morningAdhkar")}
-            description={t("settings.morningAdhkarDesc")}
             value={notifSettings.morningAdhkar}
             onToggle={handleToggleMorningAdhkar}
           />
+          <TouchableOpacity
+            style={styles.timeRow}
+            onPress={() => openTimePicker("morning")}
+          >
+            <Text style={styles.timeLabel}>{t("settings.notificationTime")}</Text>
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={14} color={COLORS.gold} />
+              <Text style={styles.timeValue}>
+                {formatTime(morningTime.hour, morningTime.minute)}
+              </Text>
+            </View>
+          </TouchableOpacity>
           <ToggleSwitch
             label={t("settings.eveningAdhkar")}
-            description={t("settings.eveningAdhkarDesc")}
             value={notifSettings.eveningAdhkar}
             onToggle={handleToggleEveningAdhkar}
           />
+          <TouchableOpacity
+            style={styles.timeRow}
+            onPress={() => openTimePicker("evening")}
+          >
+            <Text style={styles.timeLabel}>{t("settings.notificationTime")}</Text>
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={14} color={COLORS.gold} />
+              <Text style={styles.timeValue}>
+                {formatTime(eveningTime.hour, eveningTime.minute)}
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Language section */}
@@ -196,7 +256,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>{t("settings.language")}</Text>
 
           <View style={styles.languageRow}>
-            <TouchableOpacity
+            <Pressable
               style={[
                 styles.langBtn,
                 localLang === "fr" && styles.langBtnActive,
@@ -211,9 +271,9 @@ export default function SettingsScreen() {
               >
                 Français
               </Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity
+            <Pressable
               style={[
                 styles.langBtn,
                 localLang === "en" && styles.langBtnActive,
@@ -228,7 +288,7 @@ export default function SettingsScreen() {
               >
                 English
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
 
@@ -254,6 +314,83 @@ export default function SettingsScreen() {
 
         <View style={{ height: SPACING["2xl"] }} />
       </ScrollView>
+
+      {/* Time picker modal */}
+      <Modal
+        visible={timePickerTarget !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTimePickerTarget(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {timePickerTarget === "morning"
+                ? t("settings.morningAdhkar")
+                : t("settings.eveningAdhkar")}
+            </Text>
+
+            <View style={styles.pickerRow}>
+              {/* Hour */}
+              <View style={styles.pickerCol}>
+                <TouchableOpacity
+                  style={styles.pickerBtn}
+                  onPress={() => setPickerHour((h) => (h + 1) % 24)}
+                >
+                  <Ionicons name="chevron-up" size={24} color={COLORS.white} />
+                </TouchableOpacity>
+                <Text style={styles.pickerValue}>
+                  {pickerHour.toString().padStart(2, "0")}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pickerBtn}
+                  onPress={() => setPickerHour((h) => (h - 1 + 24) % 24)}
+                >
+                  <Ionicons name="chevron-down" size={24} color={COLORS.white} />
+                </TouchableOpacity>
+                <Text style={styles.pickerUnit}>{t("settings.hours")}</Text>
+              </View>
+
+              <Text style={styles.pickerSeparator}>:</Text>
+
+              {/* Minute */}
+              <View style={styles.pickerCol}>
+                <TouchableOpacity
+                  style={styles.pickerBtn}
+                  onPress={() => setPickerMinute((m) => (m + 5) % 60)}
+                >
+                  <Ionicons name="chevron-up" size={24} color={COLORS.white} />
+                </TouchableOpacity>
+                <Text style={styles.pickerValue}>
+                  {pickerMinute.toString().padStart(2, "0")}
+                </Text>
+                <TouchableOpacity
+                  style={styles.pickerBtn}
+                  onPress={() => setPickerMinute((m) => (m - 5 + 60) % 60)}
+                >
+                  <Ionicons name="chevron-down" size={24} color={COLORS.white} />
+                </TouchableOpacity>
+                <Text style={styles.pickerUnit}>{t("settings.minutes")}</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalBtnCancel}
+                onPress={() => setTimePickerTarget(null)}
+              >
+                <Text style={styles.modalBtnCancelText}>{t("settings.cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBtnConfirm}
+                onPress={confirmTimePicker}
+              >
+                <Text style={styles.modalBtnConfirmText}>{t("settings.confirm")}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <ReciterSelector
         visible={reciterModalVisible}
@@ -401,6 +538,125 @@ const styles = StyleSheet.create({
     color: COLORS.gray500,
     fontFamily: FONTS.regular,
     fontSize: 13,
+  },
+
+  // Time picker row
+  timeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING["2xl"],
+    paddingLeft: SPACING["2xl"] + 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  timeLabel: {
+    color: COLORS.gray400,
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+  },
+  timeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: COLORS.secondary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  timeValue: {
+    color: COLORS.gold,
+    fontFamily: FONTS.semiBold,
+    fontSize: 14,
+  },
+
+  // Time picker modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: COLORS.secondary,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING["2xl"],
+    width: "80%",
+    maxWidth: 320,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  modalTitle: {
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
+    fontSize: 17,
+    marginBottom: SPACING.xl,
+  },
+  pickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  pickerCol: {
+    alignItems: "center",
+  },
+  pickerBtn: {
+    padding: SPACING.sm,
+  },
+  pickerValue: {
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
+    fontSize: 36,
+    minWidth: 60,
+    textAlign: "center",
+  },
+  pickerUnit: {
+    color: COLORS.gray400,
+    fontFamily: FONTS.regular,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  pickerSeparator: {
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
+    fontSize: 36,
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: SPACING.md,
+    width: "100%",
+  },
+  modalBtnCancel: {
+    flex: 1,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  modalBtnCancelText: {
+    color: COLORS.gray400,
+    fontFamily: FONTS.semiBold,
+    fontSize: 14,
+  },
+  modalBtnConfirm: {
+    flex: 1,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.gold,
+    alignItems: "center",
+  },
+  modalBtnConfirmText: {
+    color: COLORS.primary,
+    fontFamily: FONTS.semiBold,
+    fontSize: 14,
   },
 
   // Sign out

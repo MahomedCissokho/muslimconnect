@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -245,12 +246,11 @@ export default function QuizScreen() {
         {/* Options */}
         <View style={styles.optionsContainer}>
           {question.options.map((option) => (
-            <TouchableOpacity
+            <Pressable
               key={option.number}
               style={[styles.optionBtn, getOptionStyle(option.number)]}
               onPress={() => handleAnswer(option.number)}
               disabled={hasAnswered}
-              activeOpacity={0.7}
             >
               <Text
                 style={[
@@ -285,7 +285,7 @@ export default function QuizScreen() {
                     <Ionicons name="close-circle" size={22} color="#DC2626" />
                   </View>
                 )}
-            </TouchableOpacity>
+            </Pressable>
           ))}
         </View>
 

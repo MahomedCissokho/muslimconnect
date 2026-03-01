@@ -8,6 +8,7 @@ import {
     Dimensions,
     Easing,
     Image,
+    Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -533,11 +534,10 @@ export default function QuranScreen() {
               {tabs.map((tab) => {
                 const active = activeTab === tab.key;
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={tab.key}
                     style={styles.tabBtn}
                     onPress={() => setActiveTab(tab.key)}
-                    activeOpacity={0.8}
                   >
                     {active ? (
                       <LinearGradient
@@ -563,7 +563,7 @@ export default function QuranScreen() {
                         <Text style={styles.tabText}>{tab.label}</Text>
                       </View>
                     )}
-                  </TouchableOpacity>
+                  </Pressable>
                 );
               })}
             </View>

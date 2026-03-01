@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -140,10 +141,9 @@ export default function AllahNameDetailScreen() {
         )}
 
         {/* Mark as Learned */}
-        <TouchableOpacity
+        <Pressable
           style={[styles.learnedButton, isLearned && styles.learnedButtonActive]}
           onPress={toggleLearned}
-          activeOpacity={0.8}
         >
           <Ionicons
             name={isLearned ? "checkmark-circle" : "checkmark-circle-outline"}
@@ -160,7 +160,7 @@ export default function AllahNameDetailScreen() {
               ? t("allahNames.learned", { defaultValue: "Appris" })
               : t("allahNames.markLearned", { defaultValue: "Marquer comme appris" })}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
         {/* Prev / Next Navigation */}
         <View style={styles.navRow}>

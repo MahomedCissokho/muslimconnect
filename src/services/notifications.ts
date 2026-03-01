@@ -241,9 +241,40 @@ export const notificationService = {
 
   },
 
+  // ---- Adhkar time persistence ----
+  async getMorningAdhkarTime(): Promise<{ hour: number; minute: number }> {
+    try {
+      const val = await AsyncStorage.getItem(KEYS.MORNING_ADHKAR_TIME);
+      if (val) return JSON.parse(val);
+    } catch {}
+    return { hour: DEFAULT_MORNING_HOUR, minute: DEFAULT_MORNING_MINUTE };
+  },
+
+  async setMorningAdhkarTime(hour: number, minute: number): Promise<void> {
+    await AsyncStorage.setItem(KEYS.MORNING_ADHKAR_TIME, JSON.stringify({ hour, minute }));
+  },
+
+  async getEveningAdhkarTime(): Promise<{ hour: number; minute: number }> {
+    try {
+      const val = await AsyncStorage.getItem(KEYS.EVENING_ADHKAR_TIME);
+      if (val) return JSON.parse(val);
+    } catch {}
+    return { hour: DEFAULT_EVENING_HOUR, minute: DEFAULT_EVENING_MINUTE };
+  },
+
+  async setEveningAdhkarTime(hour: number, minute: number): Promise<void> {
+    await AsyncStorage.setItem(KEYS.EVENING_ADHKAR_TIME, JSON.stringify({ hour, minute }));
+  },
+
   // ---- Schedule morning adhkar ----
-  async scheduleMorningAdhkar(lang: "fr" | "en" = "fr"): Promise<void> {
+  async scheduleMorningAdhkar(lang: "fr" | "en" = "fr", hour?: number, minute?: number): Promise<void> {
     await this.cancelMorningAdhkar();
+
+    const time = (hour !== undefined && minute !== undefined)
+      ? { hour, minute }
+      : await this.getMorningAdhkarTime();
+
+    await this.setMorningAdhkarTime(time.hour, time.minute);
 
     const messages = MORNING_ADHKAR_MESSAGES[lang];
 
@@ -256,16 +287,22 @@ export const notificationService = {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: DEFAULT_MORNING_HOUR,
-        minute: DEFAULT_MORNING_MINUTE,
+        hour: time.hour,
+        minute: time.minute,
       },
     });
 
   },
 
   // ---- Schedule evening adhkar ----
-  async scheduleEveningAdhkar(lang: "fr" | "en" = "fr"): Promise<void> {
+  async scheduleEveningAdhkar(lang: "fr" | "en" = "fr", hour?: number, minute?: number): Promise<void> {
     await this.cancelEveningAdhkar();
+
+    const time = (hour !== undefined && minute !== undefined)
+      ? { hour, minute }
+      : await this.getEveningAdhkarTime();
+
+    await this.setEveningAdhkarTime(time.hour, time.minute);
 
     const messages = EVENING_ADHKAR_MESSAGES[lang];
 
@@ -278,8 +315,8 @@ export const notificationService = {
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: DEFAULT_EVENING_HOUR,
-        minute: DEFAULT_EVENING_MINUTE,
+        hour: time.hour,
+        minute: time.minute,
       },
     });
 
