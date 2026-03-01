@@ -1,22 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
 } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Dimensions,
-  FlatList,
-  Image,
-  Share,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    FlatList,
+    Image,
+    Share,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,21 +26,24 @@ import { LoadingIndicator } from "../../src/components";
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAudio } from "../../src/contexts/AudioContext";
 import { useSettings } from "../../src/contexts/SettingsContext";
+import { RECITERS } from "../../src/data/reciters";
+import { SURAHS } from "../../src/data/surahs";
 import type { AudioOrigin, AudioTrack } from "../../src/services/audio";
 import type { AyahBookmark } from "../../src/services/bookmarks";
 import { bookmarkService } from "../../src/services/bookmarks";
 import { lastReadService } from "../../src/services/lastRead";
 import { quranService } from "../../src/services/quran";
 import type { Ayah, SurahData } from "../../src/types";
-import { buildAudioUrl } from "../../src/utils/audioUrl";
+import {
+    buildAudioUrl,
+    buildEveryayahAudioUrl,
+} from "../../src/utils/audioUrl";
 
 interface AyahWithExtra extends Ayah {
   translation?: string;
   transliteration?: string;
   audioUrl?: string;
 }
-
-const ESTIMATED_ITEM_HEIGHT = 200;
 
 export default function SurahDetailsScreen() {
   const { t, i18n } = useTranslation();
@@ -86,15 +88,13 @@ export default function SurahDetailsScreen() {
   const [ayahs, setAyahs] = useState<AyahWithExtra[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [playAllActive, setPlayAllActive] = useState(false);
   const [bookmarkedAyahs, setBookmarkedAyahs] = useState<Set<string>>(
     new Set(),
   );
 
   const flatListRef = useRef<FlatList<AyahWithExtra>>(null);
-  const lastScrolledAyah = useRef<number | null>(null);
-  const itemHeights = useRef<Map<number, number>>(new Map());
-  const headerHeight = useRef<number>(300); // estimated, updated on layout
+  const scrollRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingScrollIndex = useRef<number>(-1);
 
   const isThisSurahPlaying =
     playbackState.currentTrack?.surahNumber === surahNumber &&
@@ -112,36 +112,40 @@ export default function SurahDetailsScreen() {
     });
   }, []);
 
-  // Reset playAllActive only when audio truly stops
-  useEffect(() => {
-    if (!playbackState.currentTrack && !playbackState.isLoading) {
-      setPlayAllActive(false);
+  // ============ AUTO-SCROLL (robust scrollToIndex + retry) ============
+  // scrollToIndex est natif FlatList et sait localiser les items déjà rendus.
+  // Si l'item n'est pas encore rendu, onScrollToIndexFailed se déclenche :
+  // on scroll d'abord vers l'item mesuré le plus proche (instant, sans animation),
+  // puis on retente après un court délai (les items autour sont maintenant rendus).
+  // Ce pattern "stepping" converge toujours vers la cible.
+
+  const clearPendingScroll = useCallback(() => {
+    if (scrollRetryRef.current) {
+      clearTimeout(scrollRetryRef.current);
+      scrollRetryRef.current = null;
     }
-  }, [playbackState.currentTrack, playbackState.isLoading]);
+  }, []);
 
-  // ============ AUTO-SCROLL ============
-  // Dépend UNIQUEMENT de currentTrack. Si on ajoute isPlaying/isLoading en deps,
-  // React cancel le setTimeout à chaque changement d'état audio → scroll jamais exécuté.
-  useEffect(() => {
-    const track = playbackState.currentTrack;
-    if (!track || track.surahNumber !== surahNumber) return;
+  const scrollToAyahIndex = useCallback(
+    (targetIndex: number) => {
+      if (
+        !flatListRef.current ||
+        targetIndex < 0 ||
+        targetIndex >= ayahs.length
+      )
+        return;
 
-    const index = ayahs.findIndex((a) => a.number === track.globalAyahNumber);
-    if (index < 0) return;
+      clearPendingScroll();
+      pendingScrollIndex.current = targetIndex;
 
-    const id = setTimeout(() => {
-      flatListRef.current?.scrollToIndex({
-        index,
+      flatListRef.current.scrollToIndex({
+        index: targetIndex,
         animated: true,
-        viewPosition: 0.5, // 0 = haut, 0.5 = centré, 1 = bas
+        viewPosition: 0.65, // 40% du haut → centré confortablement
       });
-    }, 200);
-
-    // Le cleanup n'annule le timeout QUE si currentTrack change (nouveau ayah).
-    // C'est le bon comportement : on scroll vers le dernier ayah actif.
-    return () => clearTimeout(id);
-  }, [playbackState.currentTrack, surahNumber, ayahs]);
-  // ============ END AUTO-SCROLL ============
+    },
+    [ayahs.length, clearPendingScroll],
+  );
 
   const onScrollToIndexFailed = useCallback(
     (info: {
@@ -149,25 +153,56 @@ export default function SurahDetailsScreen() {
       highestMeasuredFrameIndex: number;
       averageItemLength: number;
     }) => {
-      // Fallback when item isn't rendered yet: manually approximate the offset
-      let offset = headerHeight.current;
-      for (let i = 0; i < info.index; i++) {
-        offset += itemHeights.current.get(i) ?? ESTIMATED_ITEM_HEIGHT;
-      }
-      const screenHeight = Dimensions.get("window").height;
-      const itemHeight =
-        itemHeights.current.get(info.index) ?? ESTIMATED_ITEM_HEIGHT;
-      const centeredOffset = Math.max(
-        0,
-        offset - screenHeight / 2 + itemHeight / 2,
-      );
-      flatListRef.current?.scrollToOffset({
-        offset: centeredOffset,
-        animated: true,
+      clearPendingScroll();
+
+      // 1) Jump instantly to the closest measured item
+      const safeIndex = Math.max(0, info.highestMeasuredFrameIndex);
+      flatListRef.current?.scrollToIndex({
+        index: safeIndex,
+        animated: false,
       });
+
+      // 2) Wait for FlatList to render items around the new position, then retry
+      scrollRetryRef.current = setTimeout(() => {
+        if (pendingScrollIndex.current >= 0) {
+          flatListRef.current?.scrollToIndex({
+            index: pendingScrollIndex.current,
+            animated: true,
+            viewPosition: 0.4,
+          });
+        }
+      }, 200);
     },
-    [],
+    [clearPendingScroll],
   );
+
+  // Trigger auto-scroll when the currently playing track changes
+  useEffect(() => {
+    const track = playbackState.currentTrack;
+    if (!track || track.surahNumber !== surahNumber) return;
+
+    const index = ayahs.findIndex((a) => a.number === track.globalAyahNumber);
+    if (index < 0) return;
+
+    // Small delay to let any pending renders settle
+    const timer = setTimeout(() => scrollToAyahIndex(index), 150);
+    return () => {
+      clearTimeout(timer);
+      clearPendingScroll();
+    };
+  }, [
+    playbackState.currentTrack,
+    surahNumber,
+    ayahs,
+    scrollToAyahIndex,
+    clearPendingScroll,
+  ]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearPendingScroll();
+  }, [clearPendingScroll]);
+  // ============ END AUTO-SCROLL ============
 
   const fetchSurahData = useCallback(async () => {
     if (!surahNumber) return;
@@ -179,6 +214,12 @@ export default function SurahDetailsScreen() {
       const translationEdition =
         i18n.language === "fr" ? "fr.hamidullah" : "en.sahih";
 
+      // Detect everyayah.com reciters — they use a different URL format and
+      // are not available on the alquran.cloud API.
+      const everyayahFolder = RECITERS.find(
+        (r) => r.id === reciterId,
+      )?.everyayahFolder;
+
       const [arabicData, translationData, transliterationData, audioData] =
         await Promise.all([
           quranService.getSurah(surahNumber),
@@ -186,7 +227,10 @@ export default function SurahDetailsScreen() {
           quranService
             .getSurahWithTranslation(surahNumber, "en.transliteration")
             .catch(() => null),
-          quranService.getSurahWithAudio(surahNumber, reciterId),
+          // Skip the audio API call for everyayah reciters — URLs are built locally
+          everyayahFolder
+            ? Promise.resolve(null)
+            : quranService.getSurahWithAudio(surahNumber, reciterId),
         ]);
 
       setSurahData(arabicData);
@@ -195,9 +239,14 @@ export default function SurahDetailsScreen() {
         ...ayah,
         translation: translationData.ayahs[index]?.text || "",
         transliteration: transliterationData?.ayahs[index]?.text || "",
-        audioUrl:
-          audioData.ayahs[index]?.audio ||
-          buildAudioUrl(reciterId, ayah.number),
+        audioUrl: everyayahFolder
+          ? buildEveryayahAudioUrl(
+              everyayahFolder,
+              surahNumber,
+              ayah.numberInSurah,
+            )
+          : audioData?.ayahs[index]?.audio ||
+            buildAudioUrl(reciterId, ayah.number),
       }));
 
       // Filter to the requested ayah range (from Juz/Hizb/Page navigation)
@@ -264,7 +313,6 @@ export default function SurahDetailsScreen() {
         origin: audioOrigin,
       }));
       if (playlist.length > 0) {
-        setPlayAllActive(true);
         loadPlaylist(playlist, 0);
       }
     }
@@ -289,7 +337,8 @@ export default function SurahDetailsScreen() {
   };
 
   const handlePlayAll = async () => {
-    if (playAllActive && isThisSurahPlaying) {
+    // If this surah is already playing/paused, toggle pause/resume
+    if (isThisSurahPlaying) {
       if (playbackState.isPlaying) {
         await pause();
       } else {
@@ -300,14 +349,11 @@ export default function SurahDetailsScreen() {
 
     const playlist = buildFullPlaylist();
     if (playlist.length > 0) {
-      setPlayAllActive(true);
-      lastScrolledAyah.current = null; // Reset so first ayah scrolls
       await loadPlaylist(playlist, 0);
     }
   };
 
   const handleStopAll = async () => {
-    setPlayAllActive(false);
     await stop();
   };
 
@@ -330,7 +376,6 @@ export default function SurahDetailsScreen() {
       return;
     }
 
-    setPlayAllActive(false);
     await playTrack({
       globalAyahNumber: ayah.number,
       surahNumber: surahNumber!,
@@ -411,8 +456,20 @@ export default function SurahDetailsScreen() {
     );
   }
 
-  const { englishName, englishNameTranslation, revelationType, numberOfAyahs } =
-    surahData;
+  const {
+    englishName,
+    englishNameTranslation,
+    revelationType,
+    numberOfAyahs,
+    name: surahNameAr,
+  } = surahData;
+
+  // Pick the translated surah name based on current language
+  const surahStatic = SURAHS.find((s) => s.number === surahNumber);
+  const nameTranslation =
+    i18n.language === "fr"
+      ? (surahStatic?.frenchNameTranslation ?? englishNameTranslation)
+      : englishNameTranslation;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -441,19 +498,24 @@ export default function SurahDetailsScreen() {
         }}
         showsVerticalScrollIndicator={false}
         style={styles.flatList}
-        windowSize={11}
+        windowSize={21}
+        maxToRenderPerBatch={15}
+        initialNumToRender={12}
         onScrollToIndexFailed={onScrollToIndexFailed}
         ListHeaderComponent={
-          <View
+          <TouchableOpacity
             style={styles.surahCard}
-            onLayout={(e) => {
-              headerHeight.current = e.nativeEvent.layout.height;
-            }}
+            activeOpacity={isRangeMode ? 0.7 : 1}
+            disabled={!isRangeMode}
+            onPress={() =>
+              router.push({
+                pathname: "/surah/[id]",
+                params: { id: String(surahNumber) },
+              } as any)
+            }
           >
             <Text style={styles.surahName}>{englishName}</Text>
-            <Text style={styles.surahTranslation}>
-              {englishNameTranslation}
-            </Text>
+            <Text style={styles.surahTranslation}>{nameTranslation}</Text>
             <View style={styles.divider} />
             <Text style={styles.surahInfo}>
               {t(`quran.${revelationType.toLowerCase()}`)} •{" "}
@@ -462,12 +524,20 @@ export default function SurahDetailsScreen() {
                 : `${numberOfAyahs} ${t("common.verses")}`}
             </Text>
             {!isRangeMode && (
-              <Text style={styles.bismillah}>
-                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-              </Text>
+              <Text style={styles.bismillah}>{surahNameAr}</Text>
+            )}
+            {isRangeMode && (
+              <View style={styles.viewFullRow}>
+                <Ionicons name="open-outline" size={14} color={COLORS.gold} />
+                <Text style={styles.viewFullText}>
+                  {i18n.language === "fr"
+                    ? "Voir la sourate complète"
+                    : "View full surah"}
+                </Text>
+              </View>
             )}
 
-            {playAllActive && isThisSurahPlaying ? (
+            {isThisSurahPlaying ? (
               <View style={styles.cardActions}>
                 <TouchableOpacity
                   style={[
@@ -482,7 +552,9 @@ export default function SurahDetailsScreen() {
                     color={COLORS.white}
                   />
                   <Text style={[styles.playAllText, { color: COLORS.white }]}>
-                    {playbackState.isPlaying ? "Pause" : t("quran.playAll")}
+                    {playbackState.isPlaying
+                      ? t("audio.pause")
+                      : t("audio.resume")}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -504,7 +576,7 @@ export default function SurahDetailsScreen() {
                 <Text style={styles.playAllText}>{t("quran.playAll")}</Text>
               </TouchableOpacity>
             )}
-          </View>
+          </TouchableOpacity>
         }
         renderItem={({ item: ayah, index }) => {
           const isPlayingThis =
@@ -518,10 +590,6 @@ export default function SurahDetailsScreen() {
                 styles.ayahContainer,
                 isPlayingThis && styles.ayahContainerActive,
               ]}
-              collapsable={false}
-              onLayout={(e) => {
-                itemHeights.current.set(index, e.nativeEvent.layout.height);
-              }}
             >
               <View style={styles.ayahHeader}>
                 <View style={styles.ayahNumberContainer}>
@@ -664,6 +732,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: SPACING.xl,
   },
+  viewFullRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+    marginBottom: SPACING.xl,
+  },
+  viewFullText: {
+    color: COLORS.gold,
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+  },
   cardActions: {
     flexDirection: "row",
     gap: SPACING.md,
@@ -762,18 +841,17 @@ const styles = StyleSheet.create({
   },
   ayahArabic: {
     color: COLORS.white,
-    fontSize: 20,
-    fontFamily: FONTS.arabic,
+    fontSize: 26,
+    fontFamily: FONTS.arabicBold,
     textAlign: "right",
-    lineHeight: 36,
+    lineHeight: 48,
     marginBottom: SPACING.lg,
   },
   ayahTransliteration: {
     color: COLORS.gold,
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    fontStyle: "italic",
-    lineHeight: 22,
+    fontSize: 15,
+    fontFamily: FONTS.regular,
+    lineHeight: 24,
     marginBottom: SPACING.sm,
   },
   ayahTranslation: {

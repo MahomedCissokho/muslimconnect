@@ -21,7 +21,7 @@ export default function HizbDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const hizbNumber = id ? parseInt(id, 10) : null;
-  const { playbackState, stop } = useAudio();
+  const { playbackState, stop, pause, resume } = useAudio();
 
   const quarters = useMemo(
     () => HIZB_QUARTERS.filter((q) => q.hizb === hizbNumber),
@@ -60,15 +60,19 @@ export default function HizbDetailScreen() {
   if (!hizbNumber || !range) return null;
 
   // ── Derive audio state ────────────────────────
-  const isPlayingAll =
-    (playbackState.isPlaying || playbackState.isLoading) &&
+  const isThisGroupActive =
     playbackState.currentTrack?.origin?.type === "hizb" &&
     playbackState.currentTrack?.origin?.id === hizbNumber;
 
-  const isLoadingPlayAll =
-    playbackState.isLoading &&
-    playbackState.currentTrack?.origin?.type === "hizb" &&
-    playbackState.currentTrack?.origin?.id === hizbNumber;
+  const isPlayingAll =
+    (playbackState.isPlaying ||
+      playbackState.isPaused ||
+      playbackState.isLoading) &&
+    isThisGroupActive;
+
+  const isPausedAll = playbackState.isPaused && isThisGroupActive;
+
+  const isLoadingPlayAll = playbackState.isLoading && isThisGroupActive;
 
   const currentPlayingSurahNumber = isPlayingAll
     ? playbackState.currentTrack?.surahNumber
@@ -77,14 +81,19 @@ export default function HizbDetailScreen() {
   // Navigate to surah screen with autoPlay + origin params for the first surah
   const handlePlayAll = () => {
     if (surahs.length === 0) return;
-    if (isPlayingAll) {
-      stop();
+    if (isPlayingAll && !isPausedAll) {
+      pause();
       return;
     }
-    const first = surahs[0];
-    router.push(
-      `/surah/${first.number}?fromAyah=${first.fromAyah}&toAyah=${first.toAyah}&autoPlay=1&originType=hizb&originId=${hizbNumber}` as any,
-    );
+    if (isPausedAll) {
+      resume();
+      return;
+    }
+    router.push(`/reading?type=hizb&id=${hizbNumber}&autoPlay=1` as any);
+  };
+
+  const handleStopAll = () => {
+    stop();
   };
 
   return (
@@ -114,10 +123,18 @@ export default function HizbDetailScreen() {
         totalVerses={totalVerses}
         badgeLabel={juzNumber ? `${t("quran.juzz")} ${juzNumber}` : undefined}
         onSurahPress={(num, from, to) =>
-          router.push(`/surah/${num}?fromAyah=${from}&toAyah=${to}` as any)
+          router.push(
+            `/surah/${num}?fromAyah=${from}&toAyah=${to}&originType=hizb&originId=${hizbNumber}` as any,
+          )
         }
+        onHeroPress={() => {
+          if (surahs.length === 0) return;
+          router.push(`/reading?type=hizb&id=${hizbNumber}` as any);
+        }}
         onPlayAll={handlePlayAll}
+        onStopAll={handleStopAll}
         isPlayingAll={isPlayingAll}
+        isPausedAll={isPausedAll}
         isLoadingPlayAll={isLoadingPlayAll}
         currentPlayingSurahNumber={currentPlayingSurahNumber}
       />

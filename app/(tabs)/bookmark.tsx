@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,10 +10,10 @@ import { COLORS } from "../../src/constants/colors";
 import { FONTS, FONT_SIZES } from "../../src/constants/fonts";
 import { BORDER_RADIUS, SPACING } from "../../src/constants/spacing";
 import type {
-  AyahBookmark,
-  Bookmark,
-  DuaBookmark,
-  HadithBookmark,
+    AyahBookmark,
+    Bookmark,
+    DuaBookmark,
+    HadithBookmark,
 } from "../../src/services/bookmarks";
 import { bookmarkService } from "../../src/services/bookmarks";
 
@@ -262,9 +262,11 @@ export default function BookmarkScreen() {
     setBookmarks(all);
   }, []);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
 
   const handleRemove = useCallback(async (id: string) => {
     await bookmarkService.remove(id);
@@ -321,7 +323,7 @@ export default function BookmarkScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={filtered}
         renderItem={renderItem}

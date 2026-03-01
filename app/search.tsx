@@ -87,6 +87,7 @@ export default function SearchScreen() {
         normalize(s.englishName).includes(q) ||
         normalize(s.transliteration).includes(q) ||
         normalize(s.englishNameTranslation).includes(q) ||
+        normalize(s.frenchNameTranslation).includes(q) ||
         num === q
       );
     })
@@ -154,8 +155,8 @@ export default function SearchScreen() {
             </View>
             <Text style={styles.resultTitle}>{s.transliteration}</Text>
             <Text style={styles.resultMeta}>
-              {s.englishNameTranslation} · {s.numberOfAyahs}{" "}
-              {isFr ? "versets" : "verses"}
+              {isFr ? s.frenchNameTranslation : s.englishNameTranslation} ·{" "}
+              {s.numberOfAyahs} {isFr ? "versets" : "verses"}
             </Text>
           </View>
           <View style={styles.resultRight}>

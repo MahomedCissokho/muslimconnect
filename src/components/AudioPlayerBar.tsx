@@ -1,157 +1,352 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { COLORS, FONTS, SPACING } from "../constants";
+import { COLORS, FONTS } from "../constants";
 import { useAudio } from "../contexts/AudioContext";
-import { getSurahName } from "../data";
+import { useSettings } from "../contexts/SettingsContext";
+import { getSurahTransliteration, SURAHS } from "../data";
+import { RECITERS } from "../data/reciters";
 
+/* ── Spinner for loading state ───────────────────────────────────────────── */
+const LoadingSpinner: React.FC = () => {
+  const spin = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [spin]);
+  const rotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+  return (
+    <Animated.View style={{ transform: [{ rotate }] }}>
+      <Ionicons name="sync" size={20} color={COLORS.primary} />
+    </Animated.View>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AudioPlayerBar — Floating mini-player (Spotify / Apple Music style)
+   ═══════════════════════════════════════════════════════════════════════════ */
 export const AudioPlayerBar: React.FC = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { playbackState, pause, resume, stop, next, previous } = useAudio();
+  const { reciterId } = useSettings();
 
-  const { currentTrack, isPlaying, isLoading } = playbackState;
+  const { currentTrack, isPlaying, isLoading, playlist, currentIndex } =
+    playbackState;
 
   if (!currentTrack) return null;
 
-  const surahName = getSurahName(currentTrack.surahNumber);
+  // ── Progress ──────────────────────────────────────────────────────────────
   const progress =
-    playbackState.durationMs > 0
-      ? playbackState.positionMs / playbackState.durationMs
-      : 0;
+    playlist.length > 0 ? (currentIndex + 1) / playlist.length : 0;
 
+  // ── Metadata ──────────────────────────────────────────────────────────────
+  const surahName = getSurahTransliteration(currentTrack.surahNumber);
+  const surahData = SURAHS.find((s) => s.number === currentTrack.surahNumber);
+  const surahAyahCount = surahData?.numberOfAyahs ?? 0;
+
+  const reciter = RECITERS.find((r) => r.id === reciterId);
+  const reciterName = reciter?.nameEn ?? reciterId;
+
+  const origin = currentTrack.origin;
+  let originLabel = "";
+  if (origin?.type === "juz") originLabel = `Juz ${origin.id}`;
+  if (origin?.type === "hizb") originLabel = `Hizb ${origin.id}`;
+  if (origin?.type === "page") originLabel = `Page ${origin.id}`;
+
+  const verseLabel =
+    origin?.type === "surah"
+      ? `${t("quran.verse")} ${currentTrack.ayahNumberInSurah}/${surahAyahCount}`
+      : `${t("quran.verse")} ${currentIndex + 1}/${playlist.length}${originLabel ? ` · ${originLabel}` : ""}`;
+
+  // ── Navigation ────────────────────────────────────────────────────────────
   const navigateToOrigin = () => {
     if (!currentTrack) return;
-    const origin = currentTrack.origin;
-    if (origin) {
-      switch (origin.type) {
-        case "juz":
-          router.push(`/juz/${origin.id}` as any);
-          return;
-        case "hizb":
-          router.push(`/hizb/${origin.id}` as any);
-          return;
-        case "page":
-          router.push(`/page/${origin.id}` as any);
-          return;
-        default:
-          break;
+    const o = currentTrack.origin;
+    if (o) {
+      if (o.type === "juz") {
+        router.push(`/juz/${o.id}` as any);
+        return;
+      }
+      if (o.type === "hizb") {
+        router.push(`/hizb/${o.id}` as any);
+        return;
+      }
+      if (o.type === "page") {
+        router.push(`/page/${o.id}` as any);
+        return;
       }
     }
-    // fallback → surah screen
     router.push(`/surah/${currentTrack.surahNumber}` as any);
   };
 
+  const CardWrapper = Platform.OS === "ios" ? BlurView : View;
+  const cardProps =
+    Platform.OS === "ios"
+      ? { intensity: 40, tint: "dark" as const, style: styles.card }
+      : { style: [styles.card, styles.cardAndroid] };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-      </View>
-
-      <View style={styles.content}>
-        {/* Tap track info to navigate to surah */}
-        <TouchableOpacity
-          style={styles.trackInfo}
-          onPress={navigateToOrigin}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.surahName} numberOfLines={1}>
-            {surahName}
-          </Text>
-          <Text style={styles.ayahNumber}>
-            {t("quran.verse")} {currentTrack.ayahNumberInSurah}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.controls}>
-          <TouchableOpacity onPress={previous} style={styles.controlBtn}>
-            <Ionicons name="play-skip-back" size={18} color={COLORS.white} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={isPlaying ? pause : resume}
-            style={styles.playBtn}
-          >
-            {isLoading ? (
-              <Ionicons name="hourglass" size={20} color={COLORS.primary} />
-            ) : (
-              <Ionicons
-                name={isPlaying ? "pause" : "play"}
-                size={20}
-                color={COLORS.primary}
+    <View style={styles.floatingWrapper}>
+      <CardWrapper {...cardProps}>
+        {/* ── Inner content with gradient overlay (Android) ────────── */}
+        <View style={styles.cardInner}>
+          {/* ── Top row: artwork + info + controls ─────────────────── */}
+          <View style={styles.row}>
+            {/* Artwork */}
+            <TouchableOpacity
+              onPress={navigateToOrigin}
+              activeOpacity={0.85}
+              style={styles.artworkWrap}
+            >
+              <Image
+                source={require("../../assets/images/quran.png")}
+                style={styles.artwork}
+                resizeMode="contain"
               />
-            )}
-          </TouchableOpacity>
+              {isPlaying && <View style={styles.playingDot} />}
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={next} style={styles.controlBtn}>
-            <Ionicons name="play-skip-forward" size={18} color={COLORS.white} />
-          </TouchableOpacity>
+            {/* Track info — 2 lines only, reciter on line 2 */}
+            <TouchableOpacity
+              style={styles.info}
+              onPress={navigateToOrigin}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.title} numberOfLines={1}>
+                {surahName}
+                <Text style={styles.titleSep}> · </Text>
+                <Text style={styles.titleReciter}>{reciterName}</Text>
+              </Text>
+              <Text style={styles.subtitle} numberOfLines={1}>
+                {verseLabel}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={stop} style={styles.controlBtn}>
-            <Ionicons name="close" size={20} color={COLORS.gray400} />
-          </TouchableOpacity>
+            {/* Controls — compact: prev, play, next */}
+            <View style={styles.controls}>
+              <TouchableOpacity
+                onPress={previous}
+                style={styles.ctrlBtn}
+                hitSlop={12}
+              >
+                <Ionicons
+                  name="play-skip-back"
+                  size={18}
+                  color={COLORS.white}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={isPlaying ? pause : resume}
+                style={styles.playBtn}
+                activeOpacity={0.85}
+                hitSlop={4}
+              >
+                {isLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <Ionicons
+                    name={isPlaying ? "pause" : "play"}
+                    size={22}
+                    color={COLORS.primary}
+                    style={!isPlaying ? { marginLeft: 2 } : undefined}
+                  />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={next}
+                style={styles.ctrlBtn}
+                hitSlop={12}
+              >
+                <Ionicons
+                  name="play-skip-forward"
+                  size={18}
+                  color={COLORS.white}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Close */}
+            <TouchableOpacity
+              onPress={stop}
+              style={styles.closeBtn}
+              hitSlop={12}
+            >
+              <Ionicons name="close" size={18} color="rgba(255,255,255,0.4)" />
+            </TouchableOpacity>
+          </View>
+
+          {/* ── Progress bar (bottom of card) ──────────────────────── */}
+          <View style={styles.progressTrack}>
+            <LinearGradient
+              colors={[COLORS.gold, "#E8A838"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: `${progress * 100}%` }]}
+            />
+          </View>
         </View>
-      </View>
+      </CardWrapper>
     </View>
   );
 };
 
+/* ── Styles ──────────────────────────────────────────────────────────────── */
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.secondary,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+  /* Floating container positioned above tab bar */
+  floatingWrapper: {
+    position: "absolute",
+    bottom: Platform.OS === "ios" ? 78 : 72,
+    left: 8,
+    right: 8,
+    zIndex: 100,
+    elevation: 30,
   },
-  progressBar: {
-    height: 2,
-    backgroundColor: COLORS.border,
+
+  /* Card shell */
+  card: {
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(249,189,100,0.18)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
   },
-  progressFill: {
-    height: 2,
-    backgroundColor: COLORS.gold,
+  cardAndroid: {
+    backgroundColor: "rgba(18,26,58,0.97)",
   },
-  content: {
+  cardInner: {
+    overflow: "hidden",
+  },
+
+  /* ── Main row ──────────────────────────────────────────────────────────── */
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
+    paddingLeft: 10,
+    paddingRight: 6,
+    paddingVertical: 10,
+    gap: 10,
   },
-  trackInfo: {
+
+  /* ── Artwork ─────────────────────────────────────────────────────────────── */
+  artworkWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "rgba(249,189,100,0.1)",
+  },
+  artwork: {
+    width: 42,
+    height: 42,
+  },
+  playingDot: {
+    position: "absolute",
+    bottom: 3,
+    right: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: COLORS.gold,
+    borderWidth: 1.5,
+    borderColor: COLORS.secondary,
+  },
+
+  /* ── Info (2 lines max) ──────────────────────────────────────────────────── */
+  info: {
     flex: 1,
-    marginRight: SPACING.md,
+    justifyContent: "center",
+    marginRight: 2,
   },
-  surahName: {
+  title: {
     color: COLORS.white,
     fontFamily: FONTS.semiBold,
-    fontSize: 14,
+    fontSize: 13.5,
+    lineHeight: 18,
   },
-  ayahNumber: {
-    color: COLORS.gray400,
+  titleSep: {
+    color: "rgba(255,255,255,0.25)",
     fontFamily: FONTS.regular,
-    fontSize: 12,
-    marginTop: 2,
   },
+  titleReciter: {
+    color: COLORS.gray300,
+    fontFamily: FONTS.regular,
+    fontSize: 12.5,
+  },
+  subtitle: {
+    color: COLORS.gold,
+    fontFamily: FONTS.medium,
+    fontSize: 11,
+    marginTop: 2,
+    opacity: 0.8,
+  },
+
+  /* ── Controls ────────────────────────────────────────────────────────────── */
   controls: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.md,
+    gap: 0,
   },
-  controlBtn: {
+  ctrlBtn: {
     width: 32,
-    height: 32,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
   playBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: COLORS.gold,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 2,
+  },
+  closeBtn: {
+    width: 28,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  /* ── Progress bar ────────────────────────────────────────────────────────── */
+  progressTrack: {
+    height: 3,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  progressFill: {
+    height: 3,
+    borderTopRightRadius: 1.5,
+    borderBottomRightRadius: 1.5,
   },
 });

@@ -10,7 +10,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -41,12 +41,12 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
 
   const handleGetStarted = () => {
-    router.replace("/(tabs)");
+    router.replace("/auth");
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.safe}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
@@ -131,8 +131,8 @@ export default function OnboardingScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -280,6 +280,11 @@ const styles = StyleSheet.create({
   },
 
   // ─── CTA ────────────────────────────────
+  ctaWrap: {
+    paddingHorizontal: SPACING["2xl"],
+    paddingVertical: SPACING.lg,
+    backgroundColor: COLORS.primary,
+  },
   ctaButton: {
     width: "100%",
     borderRadius: BORDER_RADIUS.full,

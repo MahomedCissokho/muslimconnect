@@ -325,7 +325,7 @@ export default function DuasScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={duas}

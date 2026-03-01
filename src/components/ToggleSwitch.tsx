@@ -1,7 +1,7 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { COLORS, FONTS, SPACING } from '../constants';
+import { COLORS, FONTS, SPACING } from "../constants";
 
 interface ToggleSwitchProps {
   label: string;
@@ -17,10 +17,9 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   description,
 }) => {
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.container}
       onPress={() => onToggle(!value)}
-      activeOpacity={0.7}
     >
       <View style={styles.labelContainer}>
         <Text style={styles.label}>{label}</Text>
@@ -30,17 +29,17 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <View style={[styles.track, value && styles.trackActive]}>
         <View style={[styles.thumb, value && styles.thumbActive]} />
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING['2xl'],
+    paddingHorizontal: SPACING["2xl"],
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
@@ -57,14 +56,15 @@ const styles = StyleSheet.create({
     color: COLORS.gray400,
     fontFamily: FONTS.regular,
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
+    lineHeight: 16,
   },
   track: {
     width: 48,
     height: 28,
     borderRadius: 14,
     backgroundColor: COLORS.gray600,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 2,
   },
   trackActive: {
@@ -77,6 +77,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   thumbActive: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
 });

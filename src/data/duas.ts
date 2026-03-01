@@ -4,6 +4,13 @@ import type { Dua, DuaCategory } from "../types";
 
 export const DUA_CATEGORIES: DuaCategory[] = [
   {
+    id: "prayer",
+    nameEn: "After Prayer",
+    nameFr: "Après la prière",
+    icon: "hand-left",
+    gradient: ["#672CBC", "#9879E9"] as const,
+  },
+  {
     id: "morning",
     nameEn: "Morning",
     nameFr: "Matin",
@@ -18,11 +25,32 @@ export const DUA_CATEGORIES: DuaCategory[] = [
     gradient: ["#4338CA", "#818CF8"] as const,
   },
   {
-    id: "prayer",
-    nameEn: "After Prayer",
-    nameFr: "Après la prière",
-    icon: "hand-left",
-    gradient: ["#672CBC", "#9879E9"] as const,
+    id: "dhikr",
+    nameEn: "Dhikr",
+    nameFr: "Dhikr",
+    icon: "sparkles",
+    gradient: ["#B45309", "#FCD34D"] as const,
+  },
+  {
+    id: "ramadan",
+    nameEn: "Ramadan",
+    nameFr: "Ramadan",
+    icon: "moon-outline",
+    gradient: ["#1E3A8A", "#3B82F6"] as const,
+  },
+  {
+    id: "suhur",
+    nameEn: "Suhur",
+    nameFr: "Suhur",
+    icon: "partly-sunny-outline",
+    gradient: ["#92400E", "#F59E0B"] as const,
+  },
+  {
+    id: "iftar",
+    nameEn: "Iftar",
+    nameFr: "Rupture du jeûne",
+    icon: "restaurant-outline",
+    gradient: ["#7C3AED", "#A78BFA"] as const,
   },
   {
     id: "protection",
@@ -65,34 +93,6 @@ export const DUA_CATEGORIES: DuaCategory[] = [
     nameFr: "Mariage & Famille",
     icon: "people",
     gradient: ["#9D174D", "#FB7185"] as const,
-  },
-  {
-    id: "dhikr",
-    nameEn: "Dhikr",
-    nameFr: "Dhikr",
-    icon: "sparkles",
-    gradient: ["#B45309", "#FCD34D"] as const,
-  },
-  {
-    id: "ramadan",
-    nameEn: "Ramadan",
-    nameFr: "Ramadan",
-    icon: "moon-outline",
-    gradient: ["#1E3A8A", "#3B82F6"] as const,
-  },
-  {
-    id: "suhur",
-    nameEn: "Suhur",
-    nameFr: "Suhur",
-    icon: "partly-sunny-outline",
-    gradient: ["#92400E", "#F59E0B"] as const,
-  },
-  {
-    id: "iftar",
-    nameEn: "Iftar",
-    nameFr: "Rupture du jeûne",
-    icon: "restaurant-outline",
-    gradient: ["#7C3AED", "#A78BFA"] as const,
   },
 ];
 
@@ -150,6 +150,38 @@ const MORNING_DUAS: Dua[] = [
   {
     id: 103,
     categoryId: "morning",
+    titleEn: "Seeking protection (3x)",
+    titleFr: "Rechercher la protection (3x)",
+    textAr:
+      "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.",
+    phonetic:
+      "Bismillāhi-lladhī lā yaḍurru ma'a-smihi shay'un fi-l-arḍi wa lā fi-s-samā'i wa huwa-s-samī'u-l-'alīm.",
+    textEn:
+      "In the name of Allah with whose name nothing is harmed on earth or in the heavens, and He is the All-Hearing, the All-Knowing.",
+    textFr:
+      "Au nom d'Allah, par le nom duquel rien n'est nui ni sur terre ni dans les cieux, et Il est l'Audient, l'Omniscient.",
+    referenceEn: "Abu Dawud, Tirmidhi (3x)",
+    referenceFr: "Abou Dawoud, Tirmidhi (3x)",
+  },
+  {
+    id: 104,
+    categoryId: "morning",
+    titleEn: "Satisfaction with Allah",
+    titleFr: "Satisfaction envers Allah",
+    textAr:
+      "رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا.",
+    phonetic:
+      "Raḍītu billāhi rabban, wa bil-islāmi dīnan, wa bi-Muḥammadin ṣalla-llāhu 'alayhi wa sallam nabiyyā.",
+    textEn:
+      "I am pleased with Allah as my Lord, with Islam as my religion, and with Muhammad (peace be upon him) as my Prophet.",
+    textFr:
+      "J'agrée Allah comme Seigneur, l'Islam comme religion et Muhammad (paix et salut sur lui) comme Prophète.",
+    referenceEn: "Abu Dawud (3x)",
+    referenceFr: "Abou Dawoud (3x)",
+  },
+  {
+    id: 105,
+    categoryId: "morning",
     titleEn: "Trust in Allah",
     titleFr: "Confiance en Allah",
     textAr:
@@ -164,20 +196,145 @@ const MORNING_DUAS: Dua[] = [
     referenceFr: "Abou Dawoud, Tirmidhi",
   },
   {
-    id: 104,
+    id: 106,
     categoryId: "morning",
-    titleEn: "Seeking protection (3x)",
-    titleFr: "Rechercher la protection (3x)",
+    titleEn: "Asking for well-being",
+    titleFr: "Demander la préservation",
     textAr:
-      "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ.",
+      "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي.",
     phonetic:
-      "Bismillāhi-lladhī lā yaḍurru ma'a-smihi shay'un fi-l-arḍi wa lā fi-s-samā'i wa huwa-s-samī'u-l-'alīm.",
+      "Allāhumma innī as'aluka-l-'āfiyata fi-d-dunyā wa-l-ākhirah. Allāhumma innī as'aluka-l-'afwa wa-l-'āfiyata fī dīnī wa dunyāya wa ahlī wa mālī.",
     textEn:
-      "In the name of Allah with whose name nothing is harmed on earth or in the heavens, and He is the All-Hearing, the All-Knowing.",
+      "O Allah, I ask You for well-being in this world and the Hereafter. O Allah, I ask You for pardon and well-being in my religion, my worldly life, my family, and my wealth.",
     textFr:
-      "Au nom d'Allah, par le nom duquel rien n'est nui ni sur terre ni dans les cieux, et Il est l'Audient, l'Omniscient.",
-    referenceEn: "Abu Dawud, Tirmidhi",
-    referenceFr: "Abou Dawoud, Tirmidhi",
+      "Ô Allah, je Te demande la préservation dans ce monde et dans l'au-delà. Ô Allah, je Te demande le pardon et la préservation dans ma religion, ma vie, ma famille et mes biens.",
+    referenceEn: "Abu Dawud, Ibn Majah",
+    referenceFr: "Abou Dawoud, Ibn Majah",
+  },
+  {
+    id: 107,
+    categoryId: "morning",
+    titleEn: "Protection from all sides",
+    titleFr: "Protection de tous les côtés",
+    textAr:
+      "اللَّهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ، وَمِنْ خَلْفِي، وَعَنْ يَمِينِي، وَعَنْ شِمَالِي، وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي.",
+    phonetic:
+      "Allāhumma-ḥfaẓnī min bayni yadayya wa min khalfī, wa 'an yamīnī wa 'an shimālī, wa min fawqī, wa a'ūdhu bi-'aẓamatika an ughtāla min taḥtī.",
+    textEn:
+      "O Allah, protect me from in front of me, from behind me, from my right, from my left, and from above me. And I seek refuge in Your Greatness from being swallowed up from beneath me.",
+    textFr:
+      "Ô Allah, protège-moi de devant moi, de derrière moi, de ma droite, de ma gauche et d'au-dessus de moi. Et je cherche refuge dans Ta Grandeur contre le fait d'être englouti par en dessous.",
+    referenceEn: "Abu Dawud, Ibn Majah",
+    referenceFr: "Abou Dawoud, Ibn Majah",
+  },
+  {
+    id: 108,
+    categoryId: "morning",
+    titleEn: "SubhanAllah (100x)",
+    titleFr: "SubhanAllah (100x)",
+    textAr: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.",
+    phonetic: "Subḥāna-llāhi wa bi-ḥamdih.",
+    textEn:
+      "Glory and praise be to Allah. (Whoever says this 100 times in the morning will have his sins forgiven even if they are as much as the foam of the sea.)",
+    textFr:
+      "Gloire et louange à Allah. (Celui qui le dit 100 fois le matin, ses péchés seront effacés même s'ils sont aussi nombreux que l'écume de la mer.)",
+    referenceEn: "Bukhari & Muslim (100x)",
+    referenceFr: "Boukhari & Mouslim (100x)",
+  },
+  {
+    id: 109,
+    categoryId: "morning",
+    titleEn: "La ilaha illAllah (100x)",
+    titleFr: "La ilaha illAllah (100x)",
+    textAr:
+      "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.",
+    phonetic:
+      "Lā ilāha illā-llāhu waḥdahu lā sharīka lah, lahu-l-mulku wa lahu-l-ḥamdu wa huwa 'alā kulli shay'in qadīr.",
+    textEn:
+      "None has the right to be worshipped except Allah alone, with no partner. To Him belongs the dominion and all praise, and He is able to do all things. (100 times)",
+    textFr:
+      "Nul ne mérite d'être adoré sauf Allah, Seul, sans associé. À Lui le royaume et la louange, et Il est capable de toute chose. (100 fois)",
+    referenceEn: "Bukhari & Muslim (100x)",
+    referenceFr: "Boukhari & Mouslim (100x)",
+  },
+  {
+    id: 110,
+    categoryId: "morning",
+    titleEn: "Ayat Al-Kursi",
+    titleFr: "Ayat Al-Koursi",
+    textAr:
+      "اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ.",
+    phonetic:
+      "Allāhu lā ilāha illā huwa-l-ḥayyu-l-qayyūm, lā ta'khudhuhū sinatun wa lā nawm, lahu mā fi-s-samāwāti wa mā fi-l-arḍ, man dha-lladhī yashfa'u 'indahu illā bi-idhnih, ya'lamu mā bayna aydīhim wa mā khalfahum, wa lā yuḥīṭūna bi-shay'in min 'ilmihi illā bi-mā shā', wasi'a kursiyyuhu-s-samāwāti wa-l-arḍ, wa lā ya'ūduhu ḥifẓuhumā, wa huwa-l-'aliyyu-l-'aẓīm.",
+    textEn:
+      "Allah! There is no deity except Him, the Ever-Living, the Sustainer of existence. Neither drowsiness overtakes Him nor sleep. To Him belongs whatever is in the heavens and whatever is on the earth. Who is it that can intercede with Him except by His permission? He knows what is before them and what will be after them, and they encompass not a thing of His knowledge except for what He wills. His Throne extends over the heavens and the earth, and their preservation tires Him not. And He is the Most High, the Most Great.",
+    textFr:
+      "Allah ! Nulle divinité autre que Lui, le Vivant, le Subsistant par Lui-même. Ni somnolence ni sommeil ne Le saisissent. À Lui appartient tout ce qui est dans les cieux et sur la terre. Qui peut intercéder auprès de Lui sans Sa permission ? Il connaît leur passé et leur futur. Et de Sa science, ils n'embrassent que ce qu'Il veut. Son Trône déborde les cieux et la terre, dont la garde ne Lui coûte aucune peine. Et Il est le Très Haut, le Très Grand.",
+    referenceEn: "Quran 2:255",
+    referenceFr: "Coran 2:255",
+  },
+  {
+    id: 111,
+    categoryId: "morning",
+    titleEn: "Surah Al-Ikhlas (3x)",
+    titleFr: "Sourate Al-Ikhlas (3x)",
+    textAr:
+      "قُلْ هُوَ اللَّهُ أَحَدٌ، اللَّهُ الصَّمَدُ، لَمْ يَلِدْ وَلَمْ يُولَدْ، وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ.",
+    phonetic:
+      "Qul huwa-llāhu aḥad. Allāhu-ṣ-ṣamad. Lam yalid wa lam yūlad. Wa lam yakun lahu kufuwan aḥad.",
+    textEn:
+      "Say: He is Allah, the One. Allah, the Eternal Refuge. He neither begets nor is born. And there is none comparable to Him. (3 times)",
+    textFr:
+      "Dis : Il est Allah, Unique. Allah, Le Seul à être imploré pour ce que nous désirons. Il n'a jamais engendré, n'a pas été engendré non plus. Et nul n'est égal à Lui. (3 fois)",
+    referenceEn: "Abu Dawud, Tirmidhi (3x)",
+    referenceFr: "Abou Dawoud, Tirmidhi (3x)",
+  },
+  {
+    id: 112,
+    categoryId: "morning",
+    titleEn: "Surah Al-Falaq (3x)",
+    titleFr: "Sourate Al-Falaq (3x)",
+    textAr:
+      "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ، مِنْ شَرِّ مَا خَلَقَ، وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ، وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ، وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ.",
+    phonetic:
+      "Qul a'ūdhu bi-rabbi-l-falaq. Min sharri mā khalaq. Wa min sharri ghāsiqin idhā waqab. Wa min sharri-n-naffāthāti fi-l-'uqad. Wa min sharri ḥāsidin idhā ḥasad.",
+    textEn:
+      "Say: I seek refuge in the Lord of daybreak. From the evil of that which He created. From the evil of darkness when it settles. From the evil of the blowers in knots. And from the evil of an envier when he envies. (3 times)",
+    textFr:
+      "Dis : Je cherche protection auprès du Seigneur de l'aube naissante. Contre le mal des êtres qu'Il a créés. Contre le mal de l'obscurité quand elle s'approfondit. Contre le mal de celles qui soufflent sur les nœuds. Et contre le mal de l'envieux quand il envie. (3 fois)",
+    referenceEn: "Abu Dawud, Tirmidhi (3x)",
+    referenceFr: "Abou Dawoud, Tirmidhi (3x)",
+  },
+  {
+    id: 113,
+    categoryId: "morning",
+    titleEn: "Surah An-Nas (3x)",
+    titleFr: "Sourate An-Nas (3x)",
+    textAr:
+      "قُلْ أَعُوذُ بِرَبِّ النَّاسِ، مَلِكِ النَّاسِ، إِلَهِ النَّاسِ، مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ، الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ، مِنَ الْجِنَّةِ وَالنَّاسِ.",
+    phonetic:
+      "Qul a'ūdhu bi-rabbi-n-nās. Maliki-n-nās. Ilāhi-n-nās. Min sharri-l-waswāsi-l-khannās. Alladhī yuwaswisu fī ṣudūri-n-nās. Mina-l-jinnati wa-n-nās.",
+    textEn:
+      "Say: I seek refuge in the Lord of mankind. The King of mankind. The God of mankind. From the evil of the retreating whisperer. Who whispers in the breasts of mankind. From among the jinn and mankind. (3 times)",
+    textFr:
+      "Dis : Je cherche protection auprès du Seigneur des hommes. Le Souverain des hommes. Le Dieu des hommes. Contre le mal du mauvais conseiller, furtif, qui souffle le mal dans les poitrines des hommes. Qu'il soit parmi les djinns ou les hommes. (3 fois)",
+    referenceEn: "Abu Dawud, Tirmidhi (3x)",
+    referenceFr: "Abou Dawoud, Tirmidhi (3x)",
+  },
+  {
+    id: 114,
+    categoryId: "morning",
+    titleEn: "Salawat on the Prophet (10x)",
+    titleFr: "Salat sur le Prophète (10x)",
+    textAr:
+      "اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ.",
+    phonetic: "Allāhumma ṣalli wa sallim 'alā nabiyyinā Muḥammad.",
+    textEn:
+      "O Allah, send prayers and peace upon our Prophet Muhammad. (10 times in the morning brings the intercession of the Prophet on the Day of Judgment.)",
+    textFr:
+      "Ô Allah, envoie Tes prières et Ton salut sur notre Prophète Muhammad. (10 fois le matin procure l'intercession du Prophète le Jour du Jugement.)",
+    referenceEn: "At-Tabarani (10x)",
+    referenceFr: "At-Tabarani (10x)",
   },
 ];
 

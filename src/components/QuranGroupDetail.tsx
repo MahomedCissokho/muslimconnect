@@ -3,12 +3,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import numberBg from "../../assets/images/number.png";
@@ -30,12 +30,18 @@ export interface QuranGroupDetailProps {
   badgeLabel?: string;
   /** Called when the user taps a surah */
   onSurahPress: (surahNumber: number, fromAyah: number, toAyah: number) => void;
+  /** Called when the user taps the hero card to view the full portion */
+  onHeroPress?: () => void;
   /** Called when the user taps "Play All" — plays all ayahs in the group */
   onPlayAll?: () => void;
+  /** Called when the user taps "Stop" */
+  onStopAll?: () => void;
   /** Whether the group is currently loading audio for play all */
   isLoadingPlayAll?: boolean;
   /** Whether audio is currently playing for this group */
   isPlayingAll?: boolean;
+  /** Whether audio is currently paused for this group */
+  isPausedAll?: boolean;
   /** Surah number currently being played (used for auto-scroll) */
   currentPlayingSurahNumber?: number;
 }
@@ -52,9 +58,12 @@ export const QuranGroupDetail: React.FC<QuranGroupDetailProps> = ({
   totalVerses,
   badgeLabel,
   onSurahPress,
+  onHeroPress,
   onPlayAll,
+  onStopAll,
   isLoadingPlayAll,
   isPlayingAll,
+  isPausedAll,
   currentPlayingSurahNumber,
 }) => {
   const { t } = useTranslation();
@@ -170,7 +179,12 @@ export const QuranGroupDetail: React.FC<QuranGroupDetailProps> = ({
     () => (
       <>
         {/* ── Hero card ── */}
-        <View style={styles.heroOuter}>
+        <TouchableOpacity
+          style={styles.heroOuter}
+          activeOpacity={onHeroPress ? 0.8 : 1}
+          disabled={!onHeroPress}
+          onPress={onHeroPress}
+        >
           <LinearGradient
             colors={["#863AE8", "#672CBC", "#4A1D96"]}
             start={{ x: 0, y: 0 }}
@@ -214,36 +228,70 @@ export const QuranGroupDetail: React.FC<QuranGroupDetailProps> = ({
                 )}
               </View>
 
-              {/* Play All Button */}
+              {/* Play All / Pause / Stop Buttons */}
               {onPlayAll && (
-                <TouchableOpacity
-                  style={styles.playAllButton}
-                  onPress={onPlayAll}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons
-                    name={
-                      isLoadingPlayAll
-                        ? "hourglass-outline"
-                        : isPlayingAll
-                          ? "pause-circle"
-                          : "play-circle"
-                    }
-                    size={22}
-                    color={COLORS.primary}
-                  />
-                  <Text style={styles.playAllText}>
-                    {isLoadingPlayAll
-                      ? t("common.loading")
-                      : isPlayingAll
-                        ? t("audio.stopAudio")
-                        : t("quran.playAll")}
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.playAllRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.playAllButton,
+                      isPlayingAll &&
+                        !isLoadingPlayAll &&
+                        styles.playAllButtonActive,
+                    ]}
+                    onPress={onPlayAll}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={
+                        isLoadingPlayAll
+                          ? "hourglass-outline"
+                          : isPlayingAll && !isPausedAll
+                            ? "pause"
+                            : "play"
+                      }
+                      size={20}
+                      color={
+                        isPlayingAll && !isLoadingPlayAll
+                          ? COLORS.white
+                          : COLORS.primary
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.playAllText,
+                        isPlayingAll &&
+                          !isLoadingPlayAll &&
+                          styles.playAllTextActive,
+                      ]}
+                    >
+                      {isLoadingPlayAll
+                        ? t("common.loading")
+                        : isPlayingAll && !isPausedAll
+                          ? t("audio.pause")
+                          : isPausedAll
+                            ? t("audio.resume")
+                            : t("quran.playAll")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Stop button — only shown when audio is active */}
+                  {isPlayingAll && !isLoadingPlayAll && onStopAll && (
+                    <TouchableOpacity
+                      style={styles.stopButton}
+                      onPress={onStopAll}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="stop" size={18} color="#FF6B6B" />
+                      <Text style={styles.stopText}>
+                        {t("audio.stopAudio")}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               )}
             </View>
           </LinearGradient>
-        </View>
+        </TouchableOpacity>
 
         {/* ── Section title ── */}
         <View style={styles.sectionHeader}>
@@ -260,9 +308,12 @@ export const QuranGroupDetail: React.FC<QuranGroupDetailProps> = ({
       totalVerses,
       badgeLabel,
       sectionLabel,
+      onHeroPress,
       onPlayAll,
+      onStopAll,
       isLoadingPlayAll,
       isPlayingAll,
+      isPausedAll,
       t,
     ],
   );
@@ -538,6 +589,15 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 
+  // Play All row
+  playAllRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: SPACING.xl,
+    gap: SPACING.md,
+  },
+
   // Play All button
   playAllButton: {
     flexDirection: "row",
@@ -547,7 +607,6 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.xl,
-    marginTop: SPACING.xl,
     gap: 8,
     shadowColor: COLORS.gold,
     shadowOffset: { width: 0, height: 4 },
@@ -555,9 +614,32 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+  playAllButtonActive: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   playAllText: {
     color: COLORS.primary,
     fontSize: 15,
     fontFamily: FONTS.bold,
+  },
+  playAllTextActive: {
+    color: COLORS.white,
+  },
+  stopButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,107,107,0.15)",
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    gap: 6,
+  },
+  stopText: {
+    color: "#FF6B6B",
+    fontSize: 14,
+    fontFamily: FONTS.semiBold,
   },
 });

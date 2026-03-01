@@ -33,10 +33,14 @@ export function calculateQiblaBearing(lat: number, lng: number): number {
   return (bearing + 360) % 360;
 }
 
-/** Convert magnetometer data to compass heading in degrees (0 = North). */
+/** Convert magnetometer data to compass heading in degrees (0 = North).
+ *  Uses atan2(-x, z) which is correct for a phone held vertically in portrait
+ *  mode (screen facing user, top pointing up) — the natural Qibla compass pose.
+ *  atan2(y, x) only works when the phone is flat on a table.
+ */
 export function magnetometerToHeading(data: MagnetometerMeasurement): number {
-  let heading = Math.atan2(data.y, data.x) * (180 / Math.PI);
-  return (360 - heading + 90) % 360;
+  let heading = Math.atan2(-data.x, data.z) * (180 / Math.PI);
+  return (heading + 360) % 360;
 }
 
 /** Calculate the shortest angular difference between two angles. */

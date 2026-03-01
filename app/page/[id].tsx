@@ -10,10 +10,10 @@ import { QuranGroupDetail } from "../../src/components/QuranGroupDetail";
 import { COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAudio } from "../../src/contexts/AudioContext";
 import {
-  getSurahsInRange,
-  getSurahTransliteration,
-  PAGES,
-  SURAHS,
+    getSurahsInRange,
+    getSurahTransliteration,
+    PAGES,
+    SURAHS,
 } from "../../src/data";
 
 export default function PageDetailScreen() {
@@ -21,7 +21,7 @@ export default function PageDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const pageNumber = id ? parseInt(id, 10) : null;
-  const { playbackState, stop } = useAudio();
+  const { playbackState, stop, pause, resume } = useAudio();
 
   const pageIndex = useMemo(
     () => PAGES.findIndex((p) => p.number === pageNumber),
@@ -82,15 +82,19 @@ export default function PageDetailScreen() {
   }, [range]);
 
   // ── Derive audio state ────────────────────────
-  const isPlayingAll =
-    (playbackState.isPlaying || playbackState.isLoading) &&
+  const isThisGroupActive =
     playbackState.currentTrack?.origin?.type === "page" &&
     playbackState.currentTrack?.origin?.id === pageNumber;
 
-  const isLoadingPlayAll =
-    playbackState.isLoading &&
-    playbackState.currentTrack?.origin?.type === "page" &&
-    playbackState.currentTrack?.origin?.id === pageNumber;
+  const isPlayingAll =
+    (playbackState.isPlaying ||
+      playbackState.isPaused ||
+      playbackState.isLoading) &&
+    isThisGroupActive;
+
+  const isPausedAll = playbackState.isPaused && isThisGroupActive;
+
+  const isLoadingPlayAll = playbackState.isLoading && isThisGroupActive;
 
   const currentPlayingSurahNumber = isPlayingAll
     ? playbackState.currentTrack?.surahNumber
@@ -99,14 +103,19 @@ export default function PageDetailScreen() {
   // Navigate to surah screen with autoPlay + origin params for the first surah
   const handlePlayAll = () => {
     if (surahs.length === 0) return;
-    if (isPlayingAll) {
-      stop();
+    if (isPlayingAll && !isPausedAll) {
+      pause();
       return;
     }
-    const first = surahs[0];
-    router.push(
-      `/surah/${first.number}?fromAyah=${first.fromAyah}&toAyah=${first.toAyah}&autoPlay=1&originType=page&originId=${pageNumber}` as any,
-    );
+    if (isPausedAll) {
+      resume();
+      return;
+    }
+    router.push(`/reading?type=page&id=${pageNumber}&autoPlay=1` as any);
+  };
+
+  const handleStopAll = () => {
+    stop();
   };
 
   if (!page || !range) return null;
@@ -138,10 +147,18 @@ export default function PageDetailScreen() {
         totalVerses={totalVerses}
         badgeLabel={`${t("quran.juzz")} ${page.juz}`}
         onSurahPress={(num, from, to) =>
-          router.push(`/surah/${num}?fromAyah=${from}&toAyah=${to}` as any)
+          router.push(
+            `/surah/${num}?fromAyah=${from}&toAyah=${to}&originType=page&originId=${pageNumber}` as any,
+          )
         }
+        onHeroPress={() => {
+          if (surahs.length === 0) return;
+          router.push(`/reading?type=page&id=${pageNumber}` as any);
+        }}
         onPlayAll={handlePlayAll}
+        onStopAll={handleStopAll}
         isPlayingAll={isPlayingAll}
+        isPausedAll={isPausedAll}
         isLoadingPlayAll={isLoadingPlayAll}
         currentPlayingSurahNumber={currentPlayingSurahNumber}
       />
