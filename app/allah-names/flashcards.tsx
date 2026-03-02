@@ -234,20 +234,16 @@ export default function FlashcardsScreen() {
               style={styles.stillLearningBtn}
               onPress={handleStillLearning}
             >
+              <Ionicons name="arrow-forward" size={22} color={COLORS.gray400} />
               <Text style={styles.stillLearningText}>
-                {t("allahNames.stillLearning", { defaultValue: "En cours" })}
+                {t("allahNames.next", { defaultValue: "Suivant" })}
               </Text>
             </Pressable>
             <Pressable style={styles.knowThisBtn} onPress={handleKnowThis}>
-              <LinearGradient
-                colors={["#10B981", "#059669"]}
-                style={styles.knowThisGradient}
-              >
-                <Ionicons name="checkmark" size={20} color={COLORS.white} />
-                <Text style={styles.knowThisText}>
-                  {t("allahNames.iKnowThis", { defaultValue: "Je connais" })}
-                </Text>
-              </LinearGradient>
+              <Ionicons name="checkmark-circle" size={22} color="#10B981" />
+              <Text style={styles.knowThisText}>
+                {t("allahNames.learned", { defaultValue: "Appris" })}
+              </Text>
             </Pressable>
           </>
         ) : (
@@ -362,11 +358,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: BORDER_RADIUS["2xl"],
     overflow: "hidden",
-    shadowColor: "#672CBC",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
   },
   cardTouchable: {
     borderRadius: BORDER_RADIUS["2xl"],
@@ -452,11 +443,13 @@ const styles = StyleSheet.create({
   },
   stillLearningBtn: {
     flex: 1,
-    borderWidth: 2,
-    borderColor: COLORS.gray600,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.sm,
+    backgroundColor: COLORS.secondary,
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: SPACING.lg,
-    alignItems: "center",
   },
   stillLearningText: {
     color: COLORS.gray400,
@@ -465,18 +458,16 @@ const styles = StyleSheet.create({
   },
   knowThisBtn: {
     flex: 1,
-    borderRadius: BORDER_RADIUS.xl,
-    overflow: "hidden",
-  },
-  knowThisGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: SPACING.lg,
     gap: SPACING.sm,
+    backgroundColor: "rgba(16,185,129,0.1)",
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.lg,
   },
   knowThisText: {
-    color: COLORS.white,
+    color: "#10B981",
     fontSize: 15,
     fontFamily: FONTS.bold,
   },

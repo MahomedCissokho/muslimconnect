@@ -38,6 +38,7 @@
     "quickAccess": "Accès rapide"
   },
   "tabs": {
+    "home": "Accueil",
     "quran": "Coran",
     "prayer": "Prière",
     "hadith": "Hadiths",
@@ -237,6 +238,11 @@
     "paidNotice": "Enseignants expérimentés · Cours encadrés",
     "confirmation": "Demande enregistrée !",
     "confirmationMessage": "Un enseignant vous contactera sous 48h par WhatsApp ou email pour discuter de votre parcours personnalisé.",
+    "confirmTitle": "Demande enregistrée",
+    "confirmSubtitle": "Nous vous contacterons très prochainement par WhatsApp / Téléphone pour finaliser votre inscription.",
+    "confirmSubtitleIntro": "Nous vous contacterons très prochainement via",
+    "confirmSubtitleEnd": "pour finaliser votre inscription.",
+    "confirmPhone": "Téléphone",
     "confirmSummaryTitle": "Votre inscription",
     "confirmSummarySubjects": "Matières",
     "confirmSummaryFormat": "Format",

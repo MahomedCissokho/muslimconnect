@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "muslimconnect",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mahomedcissokho.muslimconnect"
@@ -18,7 +17,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#040C23"
       },
-      "edgeToEdgeEnabled": true,
+      "backgroundColor": "#040C23",
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",

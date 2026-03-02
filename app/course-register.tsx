@@ -2,42 +2,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import * as isoCountries from "i18n-iso-countries";
-import arLocale from "i18n-iso-countries/langs/ar.json";
-import enLocale from "i18n-iso-countries/langs/en.json";
-import frLocale from "i18n-iso-countries/langs/fr.json";
-import { getCountries, getCountryCallingCode } from "libphonenumber-js";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Animated,
-  FlatList,
   Image,
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { CountryPickerModal } from "../src/components/CourseRegister/CountryPickerModal";
+import { CourseRegistrationSuccess } from "../src/components/CourseRegister/CourseRegistrationSuccess";
 
-isoCountries.registerLocale(enLocale);
-isoCountries.registerLocale(frLocale);
-isoCountries.registerLocale(arLocale);
-
-const getFlagEmoji = (countryCode: string) => {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-};
 
 import backIcon from "../assets/images/back.png";
 import {
@@ -85,23 +69,8 @@ export default function CourseRegisterScreen() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
-  const currentLang = typeof i18n.language === 'string' && i18n.language.startsWith("ar") 
-    ? "ar" 
-    : typeof i18n.language === 'string' && i18n.language.startsWith("en") 
-      ? "en" 
-      : "fr";
 
-  const ALL_COUNTRIES = useMemo(() => {
-    return getCountries().map((isoCode) => {
-      const callingCode = getCountryCallingCode(isoCode);
-      return {
-        isoCode,
-        code: `+${callingCode}`,
-        flag: getFlagEmoji(isoCode),
-        name: isoCountries.getName(isoCode, currentLang) || isoCode,
-      };
-    }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [currentLang]);
+  const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const confirmScale = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
@@ -136,14 +105,7 @@ export default function CourseRegisterScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  const filteredCountries = useMemo(() => {
-    if (!countrySearch) return ALL_COUNTRIES;
-    const lowerSearch = countrySearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    return ALL_COUNTRIES.filter((c) => {
-      const lowerName = c.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-      return lowerName.includes(lowerSearch) || c.code.includes(countrySearch);
-    });
-  }, [ALL_COUNTRIES, countrySearch]);
+
 
   // ── Validation helpers ──
 
@@ -302,128 +264,13 @@ export default function CourseRegisterScreen() {
   // ─── Confirmation ─────────────────────────────────────────────────────────
 
   if (confirmed) {
-    const subjectLabels = selectedSubjects
-      .map(
-        (k) =>
-          t(`courseRegister.subject${k.charAt(0).toUpperCase() + k.slice(1)}`)
-      )
-      .join(", ");
-
-    const timelineSteps = [
-      { icon: "person-outline" as const, text: t("courseRegister.confirmStep1") },
-      { icon: "document-text-outline" as const, text: t("courseRegister.confirmStep2") },
-      { icon: "calendar-outline" as const, text: t("courseRegister.confirmStep3") },
-    ];
-
     return (
-      <SafeAreaView style={$.root}>
-        <LinearGradient
-          colors={[COLORS.primary, "#080F28"]}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <ScrollView
-          contentContainerStyle={$.confirmScroll}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* ── Success icon ── */}
-          <Animated.View
-            style={[$.confirmIcon, { transform: [{ scale: confirmScale }] }]}
-          >
-            <LinearGradient
-              colors={["#10B981", "#059669"]}
-              style={$.confirmIconGrad}
-            >
-              <Ionicons name="checkmark" size={56} color="#fff" />
-            </LinearGradient>
-          </Animated.View>
-          <Text style={$.confirmTitle}>{t("courseRegister.confirmation")}</Text>
-          <Text style={$.confirmMsg}>
-            {t("courseRegister.confirmationMessage")}
-          </Text>
-
-          {/* ── Summary card ── */}
-          <View style={$.confirmCard}>
-            <Text style={$.confirmCardTitle}>
-              {t("courseRegister.confirmSummaryTitle")}
-            </Text>
-            <View style={$.confirmRow}>
-              <Text style={$.confirmLabel}>
-                {t("courseRegister.confirmSummarySubjects")}
-              </Text>
-              <Text style={$.confirmValue}>{subjectLabels}</Text>
-            </View>
-            <View style={$.confirmRow}>
-              <Text style={$.confirmLabel}>
-                {t("courseRegister.confirmSummaryFormat")}
-              </Text>
-              <Text style={$.confirmValue}>
-                {t(`courseRegister.${format}`)}
-              </Text>
-            </View>
-            <View style={$.confirmRow}>
-              <Text style={$.confirmLabel}>
-                {t("courseRegister.confirmSummaryLevel")}
-              </Text>
-              <Text style={$.confirmValue}>
-                {t(`courseRegister.${level}`)}
-              </Text>
-            </View>
-          </View>
-
-          {/* ── Timeline ── */}
-          <View style={$.confirmCard}>
-            <Text style={$.confirmCardTitle}>
-              {t("courseRegister.confirmTimeline")}
-            </Text>
-            {timelineSteps.map((s, i) => (
-              <View key={i} style={$.timelineRow}>
-                <View style={$.timelineDot}>
-                  <Ionicons name={s.icon} size={16} color={COLORS.gold} />
-                </View>
-                {i < timelineSteps.length - 1 && (
-                  <View style={$.timelineLine} />
-                )}
-                <Text style={$.timelineText}>{s.text}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* ── WhatsApp pill ── */}
-          <View style={$.confirmPill}>
-            <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-            <Text style={$.confirmPillText}>WhatsApp / Email</Text>
-          </View>
-
-          {/* ── CTAs ── */}
-          <View style={$.confirmActions}>
-            <Pressable
-              style={{ width: "100%", borderRadius: 20, overflow: "hidden" }}
-              onPress={() => router.replace("/(tabs)" as any)}
-            >
-              <LinearGradient
-                colors={[COLORS.gold, "#F59E0B"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={$.confirmCta}
-              >
-                <Ionicons name="book-outline" size={20} color={COLORS.primary} />
-                <Text style={$.confirmCtaText}>
-                  {t("courseRegister.confirmExplore")}
-                </Text>
-              </LinearGradient>
-            </Pressable>
-            <Pressable
-              onPress={() => router.replace("/(tabs)" as any)}
-              style={$.confirmSecondary}
-            >
-              <Ionicons name="home-outline" size={18} color={COLORS.gray400} />
-              <Text style={$.confirmSecondaryText}>
-                {t("courseRegister.backToHome")}
-              </Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+      <CourseRegistrationSuccess
+        confirmScale={confirmScale}
+        selectedSubjects={selectedSubjects}
+        format={format}
+        level={level}
+      />
     );
   }
 
@@ -846,7 +693,7 @@ export default function CourseRegisterScreen() {
       </KeyboardAvoidingView>
 
       {/* Bottom */}
-      <View style={$.bottom}>
+      <View style={[$.bottom, { paddingBottom: 20 + insets.bottom }]}>
         {step > 1 && (
           <Pressable style={$.bottomBack} onPress={handleBack}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -893,69 +740,18 @@ export default function CourseRegisterScreen() {
       </View>
 
       {/* Country Picker */}
-      <Modal
+      <CountryPickerModal
         visible={showCountryPicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCountryPicker(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-        >
-          <Pressable
-            style={$.mOverlay}
-            onPress={() => setShowCountryPicker(false)}
-          >
-            <Pressable style={$.mSheet} onPress={() => {}}>
-              <View style={$.mHandle} />
-              <Text style={$.mTitle}>{t("courseRegister.selectCountry") || "Select country"}</Text>
-              <View style={$.mSearch}>
-                <Ionicons name="search" size={18} color="#666" />
-                <TextInput
-                  style={$.mSearchInput}
-                  placeholder={t("courseRegister.search") || "Search..."}
-                  placeholderTextColor="#555"
-                  value={countrySearch}
-                  onChangeText={setCountrySearch}
-                  autoCorrect={false}
-                />
-              </View>
-              <FlatList
-                data={filteredCountries}
-                keyExtractor={(i) => i.code + i.name}
-                keyboardShouldPersistTaps="handled"
-                renderItem={({ item }) => {
-                const sel = item.code === countryCode;
-                return (
-                  <Pressable
-                    style={[$.mRow, sel && $.mRowSel]}
-                    onPress={() => {
-                      setCountryCode(item.code);
-                      setCountryFlag(item.flag);
-                      setShowCountryPicker(false);
-                    }}
-                  >
-                    <Text style={{ fontSize: 22 }}>{item.flag}</Text>
-                    <Text style={$.mName}>{item.name}</Text>
-                    <Text style={$.mCode}>{item.code}</Text>
-                    {sel && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={COLORS.gold}
-                      />
-                    )}
-                  </Pressable>
-                );
-              }}
-              showsVerticalScrollIndicator={false}
-              style={{ maxHeight: 340 }}
-            />
-          </Pressable>
-        </Pressable>
-      </KeyboardAvoidingView>
-    </Modal>
+        onClose={() => setShowCountryPicker(false)}
+        countryCode={countryCode}
+        searchQuery={countrySearch}
+        onSearchChange={setCountrySearch}
+        onSelect={(code, flag) => {
+          setCountryCode(code);
+          setCountryFlag(flag);
+          setShowCountryPicker(false);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -1091,9 +887,9 @@ const $ = StyleSheet.create({
   // Sections
   sectionHead: {
     color: "#fff",
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: FONTS.bold,
-    marginBottom: 22,
+    marginBottom: 20,
   },
   subHead: {
     color: COLORS.gray300,
@@ -1298,213 +1094,4 @@ const $ = StyleSheet.create({
   },
   bottomNextTextDim: { color: "#666" },
 
-  // Confirm
-  confirmScroll: {
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 40,
-  },
-  confirmIcon: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    overflow: "hidden",
-    marginBottom: 24,
-    shadowColor: "#10B981",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 14,
-  },
-  confirmIconGrad: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  confirmTitle: {
-    color: "#fff",
-    fontSize: 26,
-    fontFamily: FONTS.bold,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  confirmMsg: {
-    color: COLORS.gray400,
-    fontSize: 15,
-    fontFamily: FONTS.regular,
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  confirmCard: {
-    width: "100%",
-    backgroundColor: GLASS,
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 16,
-  },
-  confirmCardTitle: {
-    color: COLORS.gold,
-    fontSize: 14,
-    fontFamily: FONTS.semiBold,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 14,
-  },
-  confirmRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(255,255,255,0.06)",
-  },
-  confirmLabel: {
-    color: COLORS.gray400,
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    flex: 1,
-  },
-  confirmValue: {
-    color: "#fff",
-    fontSize: 14,
-    fontFamily: FONTS.semiBold,
-    flex: 2,
-    textAlign: "right",
-  },
-  timelineRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    paddingVertical: 10,
-  },
-  timelineDot: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(249,189,100,0.08)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  timelineLine: {
-    position: "absolute",
-    left: 17,
-    top: 46,
-    width: 2,
-    height: 20,
-    backgroundColor: "rgba(249,189,100,0.12)",
-    borderRadius: 1,
-  },
-  timelineText: {
-    color: "#fff",
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    flex: 1,
-  },
-  confirmPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "rgba(37,211,102,0.06)",
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    marginBottom: 24,
-  },
-  confirmPillText: {
-    color: "#fff",
-    fontSize: 15,
-    fontFamily: FONTS.semiBold,
-  },
-  confirmActions: {
-    width: "100%",
-    alignItems: "center",
-    gap: 12,
-  },
-  confirmCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    height: 58,
-  },
-  confirmCtaText: {
-    color: COLORS.primary,
-    fontSize: 17,
-    fontFamily: FONTS.bold,
-  },
-  confirmSecondary: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 12,
-  },
-  confirmSecondaryText: {
-    color: COLORS.gray400,
-    fontSize: 15,
-    fontFamily: FONTS.regular,
-  },
-
-  // Modal
-  mOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "flex-end",
-  },
-  mSheet: {
-    backgroundColor: "#0D1429",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: 14,
-    paddingHorizontal: 20,
-    paddingBottom: 34,
-    maxHeight: "65%",
-  },
-  mHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#333",
-    alignSelf: "center",
-    marginBottom: 18,
-  },
-  mTitle: {
-    color: "#fff",
-    fontSize: 20,
-    fontFamily: FONTS.bold,
-    marginBottom: 16,
-  },
-  mSearch: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: GLASS,
-    borderRadius: 14,
-    height: 48,
-    paddingHorizontal: 14,
-    marginBottom: 14,
-  },
-  mSearchInput: {
-    flex: 1,
-    color: "#fff",
-    fontFamily: FONTS.regular,
-    fontSize: 15,
-  },
-  mRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.03)",
-  },
-  mRowSel: {
-    backgroundColor: "rgba(249,189,100,0.05)",
-    borderRadius: 14,
-    paddingHorizontal: 8,
-    marginHorizontal: -8,
-  },
-  mName: { flex: 1, color: "#fff", fontSize: 16, fontFamily: FONTS.medium },
-  mCode: { color: "#777", fontSize: 15, fontFamily: FONTS.medium },
 });

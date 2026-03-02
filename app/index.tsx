@@ -158,12 +158,6 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     borderRadius: BORDER_RADIUS["2xl"],
     overflow: "hidden",
-    // shadow
-    shadowColor: "#672CBC",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
   },
   heroGradient: {
     flex: 1,
@@ -289,11 +283,6 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: BORDER_RADIUS.full,
     overflow: "hidden",
-    shadowColor: COLORS.gold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
   },
   ctaGradient: {
     flexDirection: "row",

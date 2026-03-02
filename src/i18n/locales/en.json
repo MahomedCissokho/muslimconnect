@@ -38,6 +38,7 @@
     "quickAccess": "Quick Access"
   },
   "tabs": {
+    "home": "Home",
     "quran": "Quran",
     "prayer": "Prayer",
     "hadith": "Hadith",
@@ -237,6 +238,11 @@
     "paidNotice": "Experienced teachers · Guided courses",
     "confirmation": "Request registered!",
     "confirmationMessage": "A teacher will contact you within 48 hours via WhatsApp or email to discuss your personalized learning path.",
+    "confirmTitle": "Request registered",
+    "confirmSubtitle": "We will contact you very soon via WhatsApp / Phone to finalize your registration.",
+    "confirmSubtitleIntro": "We will contact you very soon via",
+    "confirmSubtitleEnd": "to finalize your registration.",
+    "confirmPhone": "Phone",
     "confirmSummaryTitle": "Your registration",
     "confirmSummarySubjects": "Subjects",
     "confirmSummaryFormat": "Format",

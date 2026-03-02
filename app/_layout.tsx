@@ -13,11 +13,12 @@ import {
 } from "@expo-google-fonts/poppins";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Image, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import "../global.css";
@@ -31,6 +32,12 @@ import { SettingsProvider } from "../src/contexts/SettingsContext";
 import "../src/i18n";
 
 SplashScreen.preventAutoHideAsync();
+
+// Force Android navigation bar color on startup
+if (Platform.OS === "android") {
+  NavigationBar.setBackgroundColorAsync(COLORS.primary);
+  NavigationBar.setButtonStyleAsync("light");
+}
 
 // ─── Navigation content (hides audio bar on auth screen, stops on sign out) ──
 
@@ -46,6 +53,18 @@ function NavigationContent() {
       stop();
     }
   }, [session, stop]);
+
+  // Re-apply navigation bar color when app returns to foreground
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        NavigationBar.setBackgroundColorAsync(COLORS.primary);
+        NavigationBar.setButtonStyleAsync("light");
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
     <View style={styles.appContainer}>

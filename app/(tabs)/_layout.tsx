@@ -1,11 +1,14 @@
 import { Tabs } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Image, ImageSourcePropType, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import bookmarkIcon from '../../assets/images/bookmark.png';
 import duasIcon from '../../assets/images/duas.png';
 import hadithIcon from '../../assets/images/hadith.png';
 import prayerIcon from '../../assets/images/prayer.png';
 import quranIcon from '../../assets/images/quran-tab.png';
+import { FONTS } from '../../src/constants';
 
 const COLORS = {
   primary: '#040C23',
@@ -22,18 +25,21 @@ interface TabIconProps {
 
 const TabIcon = ({ source, focused }: TabIconProps) => (
   <View style={styles.iconContainer}>
-    <Image 
-      source={source} 
+    <Image
+      source={source}
       style={[
-        styles.icon, 
+        styles.icon,
         { tintColor: focused ? COLORS.gold : COLORS.grayInactive }
-      ]} 
+      ]}
       resizeMode="contain"
     />
   </View>
 );
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+
   return (
     <Tabs
       screenOptions={{
@@ -42,18 +48,23 @@ export default function TabLayout() {
           backgroundColor: COLORS.tertiary,
           borderTopWidth: 1,
           borderTopColor: COLORS.border,
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          height: 70 + insets.bottom,
+          paddingBottom: 10 + insets.bottom,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: COLORS.gold,
         tabBarInactiveTintColor: COLORS.grayInactive,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontFamily: FONTS.medium,
+          fontSize: 11,
+          marginTop: 2,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Quran',
+          title: t('tabs.home'),
           tabBarIcon: ({ focused }) => (
             <TabIcon source={quranIcon} focused={focused} />
           ),
@@ -62,7 +73,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="prayer"
         options={{
-          title: 'Prayer',
+          title: t('tabs.prayer'),
           tabBarIcon: ({ focused }) => (
             <TabIcon source={prayerIcon} focused={focused} />
           ),
@@ -71,7 +82,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="hadith"
         options={{
-          title: 'Hadith',
+          title: t('tabs.hadith'),
           tabBarIcon: ({ focused }) => (
             <TabIcon source={hadithIcon} focused={focused} />
           ),
@@ -80,7 +91,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="duas"
         options={{
-          title: 'Duas',
+          title: t('tabs.duas'),
           tabBarIcon: ({ focused }) => (
             <TabIcon source={duasIcon} focused={focused} />
           ),
@@ -89,7 +100,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookmark"
         options={{
-          title: 'Bookmark',
+          title: t('tabs.bookmark'),
           tabBarIcon: ({ focused }) => (
             <TabIcon source={bookmarkIcon} focused={focused} />
           ),
@@ -107,7 +118,7 @@ const styles = StyleSheet.create({
     height: 28,
   },
   icon: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
   },
 });
