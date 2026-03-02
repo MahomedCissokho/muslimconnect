@@ -204,24 +204,20 @@
     "bannerNextSession": "Next session",
     "bannerDesc": "Quran · Fiqh · Arabic — online or in-person",
     "bannerCta": "Join now",
-
     "screenTitle": "Join a course",
     "step": "Step {{current}} of {{total}}",
     "heroTitle": "Your journey starts here",
     "heroSubtitle": "Passionate teachers guide you through Quran, Fiqh, Arabic and more.",
-
     "personalInfo": "Personal Information",
     "fullName": "Full name",
     "phoneNumber": "Phone number",
     "email": "Email address",
-
     "location": "Your Location",
     "useMyLocation": "Use my location",
     "detectingLocation": "Detecting location...",
     "locationDetected": "Location detected",
     "orEnterManually": "Or enter manually",
     "cityAddress": "City / Address",
-
     "preferences": "Course Preferences",
     "subjectOfInterest": "Subjects of interest",
     "subjectArabic": "Arabic Language",
@@ -238,7 +234,6 @@
     "levelBeginner": "Beginner",
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
-
     "paidNotice": "Experienced teachers · Guided courses",
     "confirmation": "Request registered!",
     "confirmationMessage": "A teacher will contact you within 48 hours via WhatsApp or email to discuss your personalized learning path.",
@@ -252,7 +247,6 @@
     "confirmStep3": "Your first session is scheduled",
     "confirmExplore": "Explore the Quran",
     "backToHome": "Back to Home",
-
     "next": "Next",
     "back": "Back",
     "submit": "Submit",
@@ -261,7 +255,9 @@
     "errorPhone": "Please enter a valid phone number.",
     "errorSubmit": "Submission failed. Please try again.",
     "errorLocation": "Could not detect location. Please enter manually.",
-    "selectAtLeastOne": "Please select at least one subject."
+    "selectAtLeastOne": "Please select at least one subject.",
+    "search": "Search...",
+    "selectCountry": "Select country"
   },
   "errors": {
     "generic": "An error occurred",

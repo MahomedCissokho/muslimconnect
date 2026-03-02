@@ -1,19 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -34,6 +34,10 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
+
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
 
   const switchMode = (next: "signIn" | "signUp") => {
     setError(null);
@@ -162,6 +166,9 @@ export default function AuthScreen() {
                     value={fullName}
                     onChangeText={setFullName}
                     autoCapitalize="words"
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                    onSubmitEditing={() => emailRef.current?.focus()}
                     onFocus={() => setFocused("name")}
                     onBlur={() => setFocused(null)}
                   />
@@ -175,6 +182,7 @@ export default function AuthScreen() {
                   color={focused === "email" ? COLORS.gold : COLORS.gray600}
                 />
                 <TextInput
+                  ref={emailRef}
                   style={s.fieldInput}
                   placeholder={t("auth.email")}
                   placeholderTextColor={COLORS.gray600}
@@ -182,6 +190,9 @@ export default function AuthScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  returnKeyType="next"
+                  submitBehavior="submit"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
                   onFocus={() => setFocused("email")}
                   onBlur={() => setFocused(null)}
                 />
@@ -194,6 +205,7 @@ export default function AuthScreen() {
                   color={focused === "pwd" ? COLORS.gold : COLORS.gray600}
                 />
                 <TextInput
+                  ref={passwordRef}
                   style={[s.fieldInput, { flex: 1 }]}
                   placeholder={t("auth.password")}
                   placeholderTextColor={COLORS.gray600}
@@ -202,6 +214,15 @@ export default function AuthScreen() {
                   secureTextEntry={!showPwd}
                   textContentType="oneTimeCode"
                   autoComplete="off"
+                  returnKeyType={mode === "signUp" ? "next" : "done"}
+                  submitBehavior={mode === "signUp" ? "submit" : "blurAndSubmit"}
+                  onSubmitEditing={() => {
+                    if (mode === "signUp") {
+                      confirmPasswordRef.current?.focus();
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
                   onFocus={() => setFocused("pwd")}
                   onBlur={() => setFocused(null)}
                 />
@@ -222,6 +243,7 @@ export default function AuthScreen() {
                     color={focused === "cpwd" ? COLORS.gold : COLORS.gray600}
                   />
                   <TextInput
+                    ref={confirmPasswordRef}
                     style={[s.fieldInput, { flex: 1 }]}
                     placeholder={t("auth.confirmPassword")}
                     placeholderTextColor={COLORS.gray600}
@@ -230,6 +252,8 @@ export default function AuthScreen() {
                     secureTextEntry={!showPwd}
                     textContentType="oneTimeCode"
                     autoComplete="off"
+                    returnKeyType="done"
+                    onSubmitEditing={handleSubmit}
                     onFocus={() => setFocused("cpwd")}
                     onBlur={() => setFocused(null)}
                   />

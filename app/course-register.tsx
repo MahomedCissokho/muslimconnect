@@ -2,7 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import React, { useRef, useState } from "react";
+import * as isoCountries from "i18n-iso-countries";
+import arLocale from "i18n-iso-countries/langs/ar.json";
+import enLocale from "i18n-iso-countries/langs/en.json";
+import frLocale from "i18n-iso-countries/langs/fr.json";
+import { getCountries, getCountryCallingCode } from "libphonenumber-js";
+import React, { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -22,6 +27,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+isoCountries.registerLocale(enLocale);
+isoCountries.registerLocale(frLocale);
+isoCountries.registerLocale(arLocale);
+
+const getFlagEmoji = (countryCode: string) => {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
+
 import backIcon from "../assets/images/back.png";
 import {
   COLORS,
@@ -30,44 +47,10 @@ import {
   EMAILJS_SERVICE_ID,
   EMAILJS_TEMPLATE_ID,
   FONTS,
-  SPACING,
 } from "../src/constants";
 import { useAuth } from "../src/contexts/AuthContext";
 
 // ─── Data ───────────────────────────────────────────────────────────────────
-
-const COUNTRIES = [
-  { code: "+221", flag: "🇸🇳", name: "Sénégal" },
-  { code: "+33", flag: "🇫🇷", name: "France" },
-  { code: "+1", flag: "🇺🇸", name: "USA" },
-  { code: "+44", flag: "🇬🇧", name: "UK" },
-  { code: "+212", flag: "🇲🇦", name: "Maroc" },
-  { code: "+213", flag: "🇩🇿", name: "Algérie" },
-  { code: "+216", flag: "🇹🇳", name: "Tunisie" },
-  { code: "+225", flag: "🇨🇮", name: "Côte d'Ivoire" },
-  { code: "+223", flag: "🇲🇱", name: "Mali" },
-  { code: "+224", flag: "🇬🇳", name: "Guinée" },
-  { code: "+226", flag: "🇧🇫", name: "Burkina Faso" },
-  { code: "+227", flag: "🇳🇪", name: "Niger" },
-  { code: "+228", flag: "🇹🇬", name: "Togo" },
-  { code: "+229", flag: "🇧🇯", name: "Bénin" },
-  { code: "+237", flag: "🇨🇲", name: "Cameroun" },
-  { code: "+241", flag: "🇬🇦", name: "Gabon" },
-  { code: "+243", flag: "🇨🇩", name: "RD Congo" },
-  { code: "+234", flag: "🇳🇬", name: "Nigeria" },
-  { code: "+32", flag: "🇧🇪", name: "Belgique" },
-  { code: "+41", flag: "🇨🇭", name: "Suisse" },
-  { code: "+49", flag: "🇩🇪", name: "Allemagne" },
-  { code: "+39", flag: "🇮🇹", name: "Italie" },
-  { code: "+34", flag: "🇪🇸", name: "Espagne" },
-  { code: "+90", flag: "🇹🇷", name: "Turquie" },
-  { code: "+966", flag: "🇸🇦", name: "Arabie Saoudite" },
-  { code: "+971", flag: "🇦🇪", name: "Émirats" },
-  { code: "+20", flag: "🇪🇬", name: "Égypte" },
-  { code: "+962", flag: "🇯🇴", name: "Jordanie" },
-  { code: "+60", flag: "🇲🇾", name: "Malaisie" },
-  { code: "+62", flag: "🇮🇩", name: "Indonésie" },
-];
 
 const SUBJECTS: { key: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "arabic", icon: "globe" },
@@ -99,8 +82,26 @@ const PHONE_REGEX = /^\d{6,15}$/;
 
 export default function CourseRegisterScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+
+  const currentLang = typeof i18n.language === 'string' && i18n.language.startsWith("ar") 
+    ? "ar" 
+    : typeof i18n.language === 'string' && i18n.language.startsWith("en") 
+      ? "en" 
+      : "fr";
+
+  const ALL_COUNTRIES = useMemo(() => {
+    return getCountries().map((isoCode) => {
+      const callingCode = getCountryCallingCode(isoCode);
+      return {
+        isoCode,
+        code: `+${callingCode}`,
+        flag: getFlagEmoji(isoCode),
+        name: isoCountries.getName(isoCode, currentLang) || isoCode,
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [currentLang]);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const confirmScale = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
@@ -135,13 +136,14 @@ export default function CourseRegisterScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  const filteredCountries = countrySearch
-    ? COUNTRIES.filter(
-        (c) =>
-          c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
-          c.code.includes(countrySearch)
-      )
-    : COUNTRIES;
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch) return ALL_COUNTRIES;
+    const lowerSearch = countrySearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return ALL_COUNTRIES.filter((c) => {
+      const lowerName = c.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      return lowerName.includes(lowerSearch) || c.code.includes(countrySearch);
+    });
+  }, [ALL_COUNTRIES, countrySearch]);
 
   // ── Validation helpers ──
 
@@ -894,31 +896,36 @@ export default function CourseRegisterScreen() {
       <Modal
         visible={showCountryPicker}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setShowCountryPicker(false)}
       >
-        <Pressable
-          style={$.mOverlay}
-          onPress={() => setShowCountryPicker(false)}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
-          <Pressable style={$.mSheet} onPress={() => {}}>
-            <View style={$.mHandle} />
-            <Text style={$.mTitle}>Select country</Text>
-            <View style={$.mSearch}>
-              <Ionicons name="search" size={18} color="#666" />
-              <TextInput
-                style={$.mSearchInput}
-                placeholder="Search..."
-                placeholderTextColor="#555"
-                value={countrySearch}
-                onChangeText={setCountrySearch}
-                autoCorrect={false}
-              />
-            </View>
-            <FlatList
-              data={filteredCountries}
-              keyExtractor={(i) => i.code + i.name}
-              renderItem={({ item }) => {
+          <Pressable
+            style={$.mOverlay}
+            onPress={() => setShowCountryPicker(false)}
+          >
+            <Pressable style={$.mSheet} onPress={() => {}}>
+              <View style={$.mHandle} />
+              <Text style={$.mTitle}>{t("courseRegister.selectCountry") || "Select country"}</Text>
+              <View style={$.mSearch}>
+                <Ionicons name="search" size={18} color="#666" />
+                <TextInput
+                  style={$.mSearchInput}
+                  placeholder={t("courseRegister.search") || "Search..."}
+                  placeholderTextColor="#555"
+                  value={countrySearch}
+                  onChangeText={setCountrySearch}
+                  autoCorrect={false}
+                />
+              </View>
+              <FlatList
+                data={filteredCountries}
+                keyExtractor={(i) => i.code + i.name}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => {
                 const sel = item.code === countryCode;
                 return (
                   <Pressable
@@ -947,7 +954,8 @@ export default function CourseRegisterScreen() {
             />
           </Pressable>
         </Pressable>
-      </Modal>
+      </KeyboardAvoidingView>
+    </Modal>
     </SafeAreaView>
   );
 }

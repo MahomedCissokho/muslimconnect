@@ -204,24 +204,20 @@
     "bannerNextSession": "Prochaine session",
     "bannerDesc": "Coran · Fiqh · Arabe — en ligne ou présentiel",
     "bannerCta": "Rejoindre",
-
     "screenTitle": "Rejoindre un cours",
     "step": "Étape {{current}} sur {{total}}",
     "heroTitle": "Votre parcours commence ici",
     "heroSubtitle": "Des enseignants passionnés vous accompagnent dans votre apprentissage du Coran, du Fiqh, de l'Arabe et bien plus.",
-
     "personalInfo": "Informations personnelles",
     "fullName": "Nom complet",
     "phoneNumber": "Numéro de téléphone",
     "email": "Adresse email",
-
     "location": "Votre localisation",
     "useMyLocation": "Utiliser ma position",
     "detectingLocation": "Détection en cours...",
     "locationDetected": "Position détectée",
     "orEnterManually": "Ou saisissez manuellement",
     "cityAddress": "Ville / Adresse",
-
     "preferences": "Préférences de cours",
     "subjectOfInterest": "Matières d'intérêt",
     "subjectArabic": "Langue arabe",
@@ -238,7 +234,6 @@
     "levelBeginner": "Débutant",
     "levelIntermediate": "Intermédiaire",
     "levelAdvanced": "Avancé",
-
     "paidNotice": "Enseignants expérimentés · Cours encadrés",
     "confirmation": "Demande enregistrée !",
     "confirmationMessage": "Un enseignant vous contactera sous 48h par WhatsApp ou email pour discuter de votre parcours personnalisé.",
@@ -252,7 +247,6 @@
     "confirmStep3": "Votre première session est planifiée",
     "confirmExplore": "Explorer le Coran",
     "backToHome": "Retour à l'accueil",
-
     "next": "Suivant",
     "back": "Retour",
     "submit": "Envoyer",
@@ -261,7 +255,9 @@
     "errorPhone": "Veuillez entrer un numéro de téléphone valide.",
     "errorSubmit": "Échec de l'envoi. Veuillez réessayer.",
     "errorLocation": "Impossible de détecter la position. Veuillez saisir manuellement.",
-    "selectAtLeastOne": "Veuillez sélectionner au moins une matière."
+    "selectAtLeastOne": "Veuillez sélectionner au moins une matière.",
+    "search": "Rechercher...",
+    "selectCountry": "Sélectionner un pays"
   },
   "errors": {
     "generic": "Une erreur est survenue",
