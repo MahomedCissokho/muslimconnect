@@ -4,7 +4,7 @@
     "slug": "muslimconnect",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/quran.png",
     "scheme": "muslimconnect",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -15,7 +15,7 @@
       "package": "com.mahomedcissokho.muslimconnect",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#040C23"
+        "backgroundColor": "#FFFFFF"
       },
       "backgroundColor": "#040C23",
       "predictiveBackGestureEnabled": false,
@@ -32,7 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/muslimu.png",
+          "image": "./assets/images/quran.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#040C23"
