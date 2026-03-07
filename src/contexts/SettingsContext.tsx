@@ -34,6 +34,8 @@ interface SettingsContextValue {
     key: keyof NotificationSettings,
     value: boolean,
   ) => Promise<boolean>;
+  playerPosition: number;
+  setPlayerPosition: (position: number) => void;
   isLoading: boolean;
 }
 
@@ -53,6 +55,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [language, setLanguageState] = useState<AppLanguage>(DEFAULT_LANGUAGE);
   const [notificationSettings, setNotificationSettingsState] =
     useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
+  const [playerPosition, setPlayerPositionState] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load all settings from AsyncStorage on mount
@@ -64,17 +67,20 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
           savedDisplayOptions,
           savedLanguage,
           savedNotifSettings,
+          savedPlayerPosition,
         ] = await Promise.all([
           settingsService.getReciterId(),
           settingsService.getDisplayOptions(),
           settingsService.getLanguage(),
           notificationService.getSettings(),
+          settingsService.getPlayerPosition(),
         ]);
 
         setReciterIdState(savedReciterId);
         setDisplayOptionsState(savedDisplayOptions);
         setLanguageState(savedLanguage);
         setNotificationSettingsState(savedNotifSettings);
+        setPlayerPositionState(savedPlayerPosition);
 
         // Sync i18n language with saved preference
         if (i18n.language !== savedLanguage) {
@@ -122,6 +128,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [i18n],
   );
+
+  const setPlayerPosition = useCallback((position: number) => {
+    setPlayerPositionState(position);
+    settingsService
+      .setPlayerPosition(position)
+      .catch((err) => console.warn("Failed to persist playerPosition:", err));
+  }, []);
 
   const updateNotificationSetting = useCallback(
     async (
@@ -186,6 +199,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
       setLanguage,
       notificationSettings,
       updateNotificationSetting,
+      playerPosition,
+      setPlayerPosition,
       isLoading,
     }),
     [
@@ -197,6 +212,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
       setLanguage,
       notificationSettings,
       updateNotificationSetting,
+      playerPosition,
+      setPlayerPosition,
       isLoading,
     ],
   );

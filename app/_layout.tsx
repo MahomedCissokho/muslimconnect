@@ -18,18 +18,27 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, AppState, Image, Platform, StyleSheet, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    AppState,
+    Image,
+    Platform,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import "../global.css";
 import { AudioPlayerBar } from "../src/components";
-import { supabase } from "../src/services/supabase";
 import { COLORS } from "../src/constants";
 import { AudioProvider, useAudio } from "../src/contexts/AudioContext";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { DownloadProvider } from "../src/contexts/DownloadContext";
 import { SettingsProvider } from "../src/contexts/SettingsContext";
 import "../src/i18n";
+import { supabase } from "../src/services/supabase";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -95,7 +104,9 @@ function AuthGate({ fontsLoaded }: { fontsLoaded: boolean }) {
 
     if (
       session &&
-      (inAuth || segments[0] === undefined || (segments[0] as string) === "index")
+      (inAuth ||
+        segments[0] === undefined ||
+        (segments[0] as string) === "index")
     ) {
       router.replace("/(tabs)");
     } else if (!session && inTabs) {
@@ -138,12 +149,17 @@ export default function RootLayout() {
       const accessToken = params.get("access_token");
       const refreshToken = params.get("refresh_token");
       if (accessToken && refreshToken) {
-        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
       }
     };
 
     // App en foreground : lien reçu pendant que l'app tourne
-    const subscription = Linking.addEventListener("url", ({ url }) => handleDeepLink(url));
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      handleDeepLink(url),
+    );
 
     // App ouverte depuis un cold start via le lien
     Linking.getInitialURL().then((url) => {
@@ -164,24 +180,85 @@ export default function RootLayout() {
         />
 
         {/* Purple glow — top right */}
-        <View style={[styles.splashGlow, { top: -110, right: -90, width: 360, backgroundColor: "rgba(124,58,237,0.22)" }]} />
+        <View
+          style={[
+            styles.splashGlow,
+            {
+              top: -110,
+              right: -90,
+              width: 360,
+              backgroundColor: "rgba(124,58,237,0.22)",
+            },
+          ]}
+        />
         {/* Gold glow — bottom left */}
-        <View style={[styles.splashGlow, { bottom: -80, left: -110, width: 300, backgroundColor: "rgba(249,189,100,0.07)" }]} />
+        <View
+          style={[
+            styles.splashGlow,
+            {
+              bottom: -80,
+              left: -110,
+              width: 300,
+              backgroundColor: "rgba(249,189,100,0.07)",
+            },
+          ]}
+        />
         {/* Soft purple — center */}
-        <View style={[styles.splashGlow, { top: 200, left: -60, width: 220, backgroundColor: "rgba(103,44,188,0.09)" }]} />
+        <View
+          style={[
+            styles.splashGlow,
+            {
+              top: 200,
+              left: -60,
+              width: 220,
+              backgroundColor: "rgba(103,44,188,0.09)",
+            },
+          ]}
+        />
 
         {/* Decorative star dots */}
-        <View style={[styles.splashDot, { top: 80,  left: 40,  width: 3, height: 3 }]} />
-        <View style={[styles.splashDot, { top: 130, right: 55, width: 2, height: 2 }]} />
-        <View style={[styles.splashDot, { top: 60,  right: 100,width: 2, height: 2 }]} />
-        <View style={[styles.splashDot, { top: 190, left: 28,  width: 2, height: 2 }]} />
-        <View style={[styles.splashDot, { bottom: 180, right: 45, width: 3, height: 3 }]} />
-        <View style={[styles.splashDot, { bottom: 240, left: 35, width: 2, height: 2 }]} />
-        <View style={[styles.splashDot, { bottom: 130, right: 90, width: 2, height: 2 }]} />
+        <View
+          style={[styles.splashDot, { top: 80, left: 40, width: 3, height: 3 }]}
+        />
+        <View
+          style={[
+            styles.splashDot,
+            { top: 130, right: 55, width: 2, height: 2 },
+          ]}
+        />
+        <View
+          style={[
+            styles.splashDot,
+            { top: 60, right: 100, width: 2, height: 2 },
+          ]}
+        />
+        <View
+          style={[
+            styles.splashDot,
+            { top: 190, left: 28, width: 2, height: 2 },
+          ]}
+        />
+        <View
+          style={[
+            styles.splashDot,
+            { bottom: 180, right: 45, width: 3, height: 3 },
+          ]}
+        />
+        <View
+          style={[
+            styles.splashDot,
+            { bottom: 240, left: 35, width: 2, height: 2 },
+          ]}
+        />
+        <View
+          style={[
+            styles.splashDot,
+            { bottom: 130, right: 90, width: 2, height: 2 },
+          ]}
+        />
 
         {/* ── Center content ── */}
         <View style={styles.splashCenter}>
-
           {/* Outer decorative ring */}
           <View style={styles.splashOuterRing}>
             {/* Icon gradient square */}
@@ -210,30 +287,37 @@ export default function RootLayout() {
           <Text style={styles.splashName}>MUSLIM UNIVERSE</Text>
 
           {/* Arabic Bismillah */}
-          <Text style={styles.splashTagline}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</Text>
-
+          <Text style={styles.splashTagline}>
+            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+          </Text>
         </View>
 
         {/* Bottom loader */}
-        <ActivityIndicator size="small" color={COLORS.gold} style={styles.splashLoader} />
+        <ActivityIndicator
+          size="small"
+          color={COLORS.gold}
+          style={styles.splashLoader}
+        />
       </View>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <AudioProvider>
-            <DownloadProvider>
-              <AuthGate fontsLoaded={fontsLoaded} />
-              <NavigationContent />
-              <StatusBar style="light" backgroundColor={COLORS.primary} />
-            </DownloadProvider>
-          </AudioProvider>
-        </SettingsProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <SettingsProvider>
+            <AudioProvider>
+              <DownloadProvider>
+                <AuthGate fontsLoaded={fontsLoaded} />
+                <NavigationContent />
+                <StatusBar style="light" backgroundColor={COLORS.primary} />
+              </DownloadProvider>
+            </AudioProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

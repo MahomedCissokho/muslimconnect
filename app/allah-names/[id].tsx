@@ -4,13 +4,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -86,7 +86,9 @@ export default function AllahNameDetailScreen() {
             <Text style={styles.numberPillText}>#{name.number}</Text>
           </View>
           <Text style={styles.arabicNameLarge}>{name.name}</Text>
-          <Text style={styles.transliterationLarge}>{name.transliteration}</Text>
+          <Text style={styles.transliterationLarge}>
+            {name.transliteration}
+          </Text>
         </View>
 
         {/* Meaning Card */}
@@ -116,7 +118,9 @@ export default function AllahNameDetailScreen() {
         {quranRefs.length > 0 && (
           <View style={styles.refsSection}>
             <Text style={styles.cardLabel}>
-              {t("allahNames.quranRefs", { defaultValue: "Trouvé dans le Coran" })}
+              {t("allahNames.quranRefs", {
+                defaultValue: "Trouvé dans le Coran",
+              })}
             </Text>
             <View style={styles.refsRow}>
               {quranRefs.map((ref, i) => (
@@ -142,7 +146,10 @@ export default function AllahNameDetailScreen() {
 
         {/* Mark as Learned */}
         <Pressable
-          style={[styles.learnedButton, isLearned && styles.learnedButtonActive]}
+          style={[
+            styles.learnedButton,
+            isLearned && styles.learnedButtonActive,
+          ]}
           onPress={toggleLearned}
         >
           <Ionicons
@@ -158,14 +165,19 @@ export default function AllahNameDetailScreen() {
           >
             {isLearned
               ? t("allahNames.learned", { defaultValue: "Appris" })
-              : t("allahNames.markLearned", { defaultValue: "Marquer comme appris" })}
+              : t("allahNames.markLearned", {
+                  defaultValue: "Marquer comme appris",
+                })}
           </Text>
         </Pressable>
 
         {/* Prev / Next Navigation */}
         <View style={styles.navRow}>
           <TouchableOpacity
-            style={[styles.navButton, nameNumber <= 1 && styles.navButtonDisabled]}
+            style={[
+              styles.navButton,
+              nameNumber <= 1 && styles.navButtonDisabled,
+            ]}
             onPress={() => nameNumber > 1 && goToName(nameNumber - 1)}
             disabled={nameNumber <= 1}
           >
@@ -185,7 +197,10 @@ export default function AllahNameDetailScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.navButton, nameNumber >= 99 && styles.navButtonDisabled]}
+            style={[
+              styles.navButton,
+              nameNumber >= 99 && styles.navButtonDisabled,
+            ]}
             onPress={() => nameNumber < 99 && goToName(nameNumber + 1)}
             disabled={nameNumber >= 99}
           >
@@ -260,7 +275,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.arabicBold,
     textAlign: "center",
     marginBottom: SPACING.md,
-    lineHeight: 72,
+    lineHeight: 82,
+    paddingTop: 10,
   },
   transliterationLarge: {
     color: COLORS.white,

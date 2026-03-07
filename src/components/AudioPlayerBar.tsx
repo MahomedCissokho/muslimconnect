@@ -2,18 +2,26 @@ import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Animated,
+  Dimensions,
   Easing,
   Image,
   Platform,
+  Animated as RNAnimated,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
 import { COLORS, FONTS } from "../constants";
 import { useAudio } from "../contexts/AudioContext";
@@ -21,12 +29,14 @@ import { useSettings } from "../contexts/SettingsContext";
 import { getSurahTransliteration, SURAHS } from "../data";
 import { RECITERS } from "../data/reciters";
 
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 /* ── Spinner for loading state ───────────────────────────────────────────── */
 const LoadingSpinner: React.FC = () => {
-  const spin = useRef(new Animated.Value(0)).current;
+  const spin = useRef(new RNAnimated.Value(0)).current;
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.timing(spin, {
+    const anim = RNAnimated.loop(
+      RNAnimated.timing(spin, {
         toValue: 1,
         duration: 900,
         easing: Easing.linear,
@@ -41,9 +51,9 @@ const LoadingSpinner: React.FC = () => {
     outputRange: ["0deg", "360deg"],
   });
   return (
-    <Animated.View style={{ transform: [{ rotate }] }}>
+    <RNAnimated.View style={{ transform: [{ rotate }] }}>
       <Ionicons name="sync" size={20} color={COLORS.primary} />
-    </Animated.View>
+    </RNAnimated.View>
   );
 };
 
@@ -54,10 +64,54 @@ export const AudioPlayerBar: React.FC = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { playbackState, pause, resume, stop, next, previous } = useAudio();
-  const { reciterId } = useSettings();
+  const { reciterId, playerPosition, setPlayerPosition } = useSettings();
 
   const { currentTrack, isPlaying, isLoading, playlist, currentIndex } =
     playbackState;
+
+  // ── Draggable position ───────────────────────────────────────────────────
+  const MAX_OFFSET = SCREEN_HEIGHT - 150; // Maximum upward distance from default
+
+  const offsetY = useSharedValue(0);
+  const startOffsetY = useSharedValue(0);
+
+  // Sync with saved position (handles initial load from AsyncStorage)
+  useEffect(() => {
+    offsetY.value = -playerPosition;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerPosition]);
+
+  const persistPosition = useCallback(
+    (position: number) => {
+      setPlayerPosition(position);
+    },
+    [setPlayerPosition],
+  );
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10]) // Require 10px movement to avoid stealing taps
+    .onStart(() => {
+      startOffsetY.value = offsetY.value;
+    })
+    .onUpdate((e) => {
+      // Clamp between -MAX_OFFSET (highest) and 0 (default)
+      offsetY.value = Math.max(
+        -MAX_OFFSET,
+        Math.min(0, startOffsetY.value + e.translationY),
+      );
+    })
+    .onEnd(() => {
+      const position = Math.round(-offsetY.value);
+      offsetY.value = withSpring(offsetY.value, {
+        damping: 15,
+        stiffness: 150,
+      });
+      runOnJS(persistPosition)(position);
+    });
+
+  const dragStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: offsetY.value }],
+  }));
 
   if (!currentTrack) return null;
 
@@ -112,109 +166,120 @@ export const AudioPlayerBar: React.FC = () => {
       : { style: [styles.card, styles.cardAndroid] };
 
   return (
-    <View style={styles.floatingWrapper}>
-      <CardWrapper {...cardProps}>
-        {/* ── Inner content with gradient overlay (Android) ────────── */}
-        <View style={styles.cardInner}>
-          {/* ── Top row: artwork + info + controls ─────────────────── */}
-          <View style={styles.row}>
-            {/* Artwork */}
-            <TouchableOpacity
-              onPress={navigateToOrigin}
-              activeOpacity={0.85}
-              style={styles.artworkWrap}
-            >
-              <Image
-                source={require("../../assets/images/quran.png")}
-                style={styles.artwork}
-                resizeMode="contain"
-              />
-              {isPlaying && <View style={styles.playingDot} />}
-            </TouchableOpacity>
+    <GestureDetector gesture={panGesture}>
+      <Animated.View style={[styles.floatingWrapper, dragStyle]}>
+        {/* Drag indicator handle */}
+        <View style={styles.dragHandle} pointerEvents="none">
+          <View style={styles.dragHandleBar} />
+        </View>
 
-            {/* Track info — 2 lines only, reciter on line 2 */}
-            <TouchableOpacity
-              style={styles.info}
-              onPress={navigateToOrigin}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.title} numberOfLines={1}>
-                {surahName}
-                <Text style={styles.titleSep}> · </Text>
-                <Text style={styles.titleReciter}>{reciterName}</Text>
-              </Text>
-              <Text style={styles.subtitle} numberOfLines={1}>
-                {verseLabel}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Controls — compact: prev, play, next */}
-            <View style={styles.controls}>
+        <CardWrapper {...cardProps}>
+          {/* ── Inner content with gradient overlay (Android) ────────── */}
+          <View style={styles.cardInner}>
+            {/* ── Top row: artwork + info + controls ─────────────────── */}
+            <View style={styles.row}>
+              {/* Artwork */}
               <TouchableOpacity
-                onPress={previous}
-                style={styles.ctrlBtn}
-                hitSlop={12}
-              >
-                <Ionicons
-                  name="play-skip-back"
-                  size={18}
-                  color={COLORS.white}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={isPlaying ? pause : resume}
-                style={styles.playBtn}
+                onPress={navigateToOrigin}
                 activeOpacity={0.85}
-                hitSlop={4}
+                style={styles.artworkWrap}
               >
-                {isLoading ? (
-                  <LoadingSpinner />
-                ) : (
-                  <Ionicons
-                    name={isPlaying ? "pause" : "play"}
-                    size={22}
-                    color={COLORS.primary}
-                    style={!isPlaying ? { marginLeft: 2 } : undefined}
-                  />
-                )}
+                <Image
+                  source={require("../../assets/images/quran.png")}
+                  style={styles.artwork}
+                  resizeMode="contain"
+                />
+                {isPlaying && <View style={styles.playingDot} />}
               </TouchableOpacity>
 
+              {/* Track info — 2 lines only, reciter on line 2 */}
               <TouchableOpacity
-                onPress={next}
-                style={styles.ctrlBtn}
+                style={styles.info}
+                onPress={navigateToOrigin}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.title} numberOfLines={1}>
+                  {surahName}
+                  <Text style={styles.titleSep}> · </Text>
+                  <Text style={styles.titleReciter}>{reciterName}</Text>
+                </Text>
+                <Text style={styles.subtitle} numberOfLines={1}>
+                  {verseLabel}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Controls — compact: prev, play, next */}
+              <View style={styles.controls}>
+                <TouchableOpacity
+                  onPress={previous}
+                  style={styles.ctrlBtn}
+                  hitSlop={12}
+                >
+                  <Ionicons
+                    name="play-skip-back"
+                    size={18}
+                    color={COLORS.white}
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={isPlaying ? pause : resume}
+                  style={styles.playBtn}
+                  activeOpacity={0.85}
+                  hitSlop={4}
+                >
+                  {isLoading ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <Ionicons
+                      name={isPlaying ? "pause" : "play"}
+                      size={22}
+                      color={COLORS.primary}
+                      style={!isPlaying ? { marginLeft: 2 } : undefined}
+                    />
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={next}
+                  style={styles.ctrlBtn}
+                  hitSlop={12}
+                >
+                  <Ionicons
+                    name="play-skip-forward"
+                    size={18}
+                    color={COLORS.white}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* Close */}
+              <TouchableOpacity
+                onPress={stop}
+                style={styles.closeBtn}
                 hitSlop={12}
               >
                 <Ionicons
-                  name="play-skip-forward"
+                  name="close"
                   size={18}
-                  color={COLORS.white}
+                  color="rgba(255,255,255,0.4)"
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Close */}
-            <TouchableOpacity
-              onPress={stop}
-              style={styles.closeBtn}
-              hitSlop={12}
-            >
-              <Ionicons name="close" size={18} color="rgba(255,255,255,0.4)" />
-            </TouchableOpacity>
+            {/* ── Progress bar (bottom of card) ──────────────────────── */}
+            <View style={styles.progressTrack}>
+              <LinearGradient
+                colors={[COLORS.gold, "#E8A838"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.progressFill, { width: `${progress * 100}%` }]}
+              />
+            </View>
           </View>
-
-          {/* ── Progress bar (bottom of card) ──────────────────────── */}
-          <View style={styles.progressTrack}>
-            <LinearGradient
-              colors={[COLORS.gold, "#E8A838"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={[styles.progressFill, { width: `${progress * 100}%` }]}
-            />
-          </View>
-        </View>
-      </CardWrapper>
-    </View>
+        </CardWrapper>
+      </Animated.View>
+    </GestureDetector>
   );
 };
 
@@ -228,6 +293,18 @@ const styles = StyleSheet.create({
     right: 8,
     zIndex: 100,
     elevation: 30,
+  },
+
+  /* Drag handle indicator */
+  dragHandle: {
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  dragHandleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
 
   /* Card shell */

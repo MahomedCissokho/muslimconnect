@@ -4,16 +4,19 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-    Animated,
-    Dimensions,
-    Easing,
-    Image,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Easing,
+  Image,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  UIManager,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,14 +25,14 @@ import { HizbList, JuzList, PageList, SurahList } from "../../src/components";
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from "../../src/constants";
 import { useAuth } from "../../src/contexts/AuthContext";
 import {
-    HIZB_QUARTERS,
-    SURAHS,
-    TOTAL_AYAHS,
-    TOTAL_SURAHS,
+  HIZB_QUARTERS,
+  SURAHS,
+  TOTAL_AYAHS,
+  TOTAL_SURAHS,
 } from "../../src/data";
 import {
-    lastReadService,
-    type LastReadData,
+  lastReadService,
+  type LastReadData,
 } from "../../src/services/lastRead";
 
 const { width: SW } = Dimensions.get("window");
@@ -105,6 +108,14 @@ function getGreeting(): string {
   return "Layla Sa'ida";
 }
 
+// Enable LayoutAnimation on Android
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function QuranScreen() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -112,21 +123,16 @@ export default function QuranScreen() {
   const [activeTab, setActiveTab] = useState<TabType>("surah");
   const [lastRead, setLastRead] = useState<LastReadData | null>(null);
 
-  const headerAnim = useRef(new Animated.Value(0)).current;
-  const greetAnim = useRef(new Animated.Value(0)).current;
-  const heroAnim = useRef(new Animated.Value(0)).current;
-  const bannerAnim = useRef(new Animated.Value(0)).current;
-  const actionsAnim = useRef(new Animated.Value(0)).current;
-  const statsAnim = useRef(new Animated.Value(0)).current;
-  const tabsAnim = useRef(new Animated.Value(0)).current;
-
   // Load on mount — ensures data is ready even if useFocusEffect fires in a transitional state
   useEffect(() => {
     lastReadService
       .get()
-      .then(setLastRead)
+      .then((data) => {
+        if (data)
+          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setLastRead(data);
+      })
       .catch(() => {});
-
   }, []);
 
   // Reload whenever the tab regains focus (e.g. user navigated away and came back)
@@ -134,57 +140,16 @@ export default function QuranScreen() {
     useCallback(() => {
       lastReadService
         .get()
-        .then(setLastRead)
+        .then((data) => {
+          if (data)
+            LayoutAnimation.configureNext(
+              LayoutAnimation.Presets.easeInEaseOut,
+            );
+          setLastRead(data);
+        })
         .catch(() => {});
     }, []),
   );
-
-  useEffect(() => {
-    Animated.stagger(100, [
-      Animated.spring(headerAnim, {
-        toValue: 1,
-        tension: 60,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(greetAnim, {
-        toValue: 1,
-        tension: 55,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(heroAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(bannerAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(actionsAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(statsAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-      Animated.spring(tabsAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 9,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [actionsAnim, bannerAnim, greetAnim, headerAnim, heroAnim, statsAnim, tabsAnim]);
 
   const lastReadSurah = lastRead
     ? SURAHS.find((s) => s.number === lastRead.surahNumber)
@@ -245,17 +210,6 @@ export default function QuranScreen() {
     .toUpperCase()
     .slice(0, 2);
 
-  const entrance = (anim: Animated.Value, dy = 24) => ({
-    transform: [
-      {
-        translateY: anim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [dy, 0],
-        }),
-      },
-    ],
-  });
-
   const dots = [
     { x: 20, color: "rgba(249,189,100,0.6)", size: 4, delay: 0 },
     { x: SW * 0.25, color: "rgba(255,255,255,0.4)", size: 3, delay: 700 },
@@ -303,7 +257,7 @@ export default function QuranScreen() {
 
       <View style={styles.container}>
         {/* ── Header ── */}
-        <Animated.View style={[styles.header, entrance(headerAnim, 16)]}>
+        <View style={styles.header}>
           <TouchableOpacity
             style={styles.avatarBtn}
             onPress={() => router.push("/settings" as any)}
@@ -335,7 +289,7 @@ export default function QuranScreen() {
               <Ionicons name="search" size={20} color={COLORS.gold} />
             </LinearGradient>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         <ScrollView
           style={styles.scroll}
@@ -343,9 +297,7 @@ export default function QuranScreen() {
           contentContainerStyle={{ paddingBottom: 110 }}
         >
           {/* ── Greeting ── */}
-          <Animated.View
-            style={[styles.greetingSection, entrance(greetAnim, 14)]}
-          >
+          <View style={styles.greetingSection}>
             <View>
               <Text style={styles.greetSub}>{getGreeting()} ✨</Text>
               <Text style={styles.greetName}>
@@ -353,148 +305,142 @@ export default function QuranScreen() {
               </Text>
             </View>
             <Text style={styles.bismillah}>﷽</Text>
-          </Animated.View>
+          </View>
 
           {/* ── Last Read Hero Card ── */}
-          <Animated.View style={[styles.heroPad, entrance(heroAnim, 40)]}>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() =>
-                lastRead && router.push(`/surah/${lastRead.surahNumber}` as any)
-              }
-            >
-              <LinearGradient
-                colors={["#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.heroGrad}
+          {lastRead && lastReadSurah && (
+            <View style={styles.heroPad}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() =>
+                  router.push(`/surah/${lastRead.surahNumber}` as any)
+                }
               >
-                {dots.map((d, i) => (
-                  <Dot
-                    key={i}
-                    x={d.x}
-                    color={d.color}
-                    size={d.size}
-                    delay={d.delay}
+                <LinearGradient
+                  colors={["#6D28D9", "#7C3AED", "#8B5CF6", "#A78BFA"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.heroGrad}
+                >
+                  {dots.map((d, i) => (
+                    <Dot
+                      key={i}
+                      x={d.x}
+                      color={d.color}
+                      size={d.size}
+                      delay={d.delay}
+                    />
+                  ))}
+
+                  {/* Deco rings */}
+                  <View
+                    style={[
+                      styles.decoRing,
+                      {
+                        width: 180,
+                        height: 180,
+                        top: -60,
+                        right: -50,
+                        borderColor: "rgba(255,255,255,0.06)",
+                      },
+                    ]}
                   />
-                ))}
+                  <View
+                    style={[
+                      styles.decoRing,
+                      {
+                        width: 120,
+                        height: 120,
+                        bottom: -30,
+                        left: -30,
+                        borderColor: "rgba(255,255,255,0.04)",
+                      },
+                    ]}
+                  />
+                  <View style={styles.decoSquare} />
 
-                {/* Deco rings */}
-                <View
-                  style={[
-                    styles.decoRing,
-                    {
-                      width: 180,
-                      height: 180,
-                      top: -60,
-                      right: -50,
-                      borderColor: "rgba(255,255,255,0.06)",
-                    },
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.decoRing,
-                    {
-                      width: 120,
-                      height: 120,
-                      bottom: -30,
-                      left: -30,
-                      borderColor: "rgba(255,255,255,0.04)",
-                    },
-                  ]}
-                />
-                <View style={styles.decoSquare} />
-
-                <View style={styles.heroLeft}>
-                  <View style={styles.heroBadge}>
-                    <View style={styles.heroDot} />
-                    <Text style={styles.heroBadgeText}>
-                      {t("home.lastRead")}
-                    </Text>
-                  </View>
-                  <Text style={styles.heroTitle}>
-                    {lastReadSurah
-                      ? lastReadSurah.transliteration
-                      : t("home.noLastRead")}
-                  </Text>
-                  {lastReadSurah && (
-                    <>
-                      <Text style={styles.heroAr}>{lastReadSurah.name}</Text>
-                      <Text style={styles.heroAyah}>
-                        {t("home.ayahNo")}: {lastRead?.ayahNumber}
+                  <View style={styles.heroLeft}>
+                    <View style={styles.heroBadge}>
+                      <View style={styles.heroDot} />
+                      <Text style={styles.heroBadgeText}>
+                        {t("home.lastRead")}
                       </Text>
-                      <View style={styles.heroChips}>
-                        {lastRead?.juz != null && (
-                          <View style={styles.chip}>
-                            <Ionicons
-                              name="layers-outline"
-                              size={10}
-                              color={COLORS.gold}
-                            />
-                            <Text style={styles.chipTxt}>
-                              {t("quran.juzz")} {lastRead.juz}
-                            </Text>
-                          </View>
-                        )}
-                        {lastRead?.page != null && (
-                          <View style={styles.chip}>
-                            <Ionicons
-                              name="document-outline"
-                              size={10}
-                              color={COLORS.gold}
-                            />
-                            <Text style={styles.chipTxt}>
-                              {t("quran.page")} {lastRead.page}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                      <TouchableOpacity
-                        style={styles.heroCtaWrap}
-                        activeOpacity={0.85}
-                        onPress={() =>
-                          router.push(`/surah/${lastRead?.surahNumber}` as any)
-                        }
-                      >
-                        <LinearGradient
-                          colors={["#F9BD64", "#F59E0B"]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={styles.heroCta}
-                        >
+                    </View>
+                    <Text style={styles.heroTitle}>
+                      {lastReadSurah.transliteration}
+                    </Text>
+                    <Text style={styles.heroAr}>{lastReadSurah.name}</Text>
+                    <Text style={styles.heroAyah}>
+                      {t("home.ayahNo")}: {lastRead.ayahNumber}
+                    </Text>
+                    <View style={styles.heroChips}>
+                      {lastRead?.juz != null && (
+                        <View style={styles.chip}>
                           <Ionicons
-                            name="book"
-                            size={13}
-                            color={COLORS.primary}
+                            name="layers-outline"
+                            size={10}
+                            color={COLORS.gold}
                           />
-                          <Text style={styles.heroCtaTxt}>
-                            {t("home.continueReading")}
+                          <Text style={styles.chipTxt}>
+                            {t("quran.juzz")} {lastRead.juz}
                           </Text>
+                        </View>
+                      )}
+                      {lastRead?.page != null && (
+                        <View style={styles.chip}>
                           <Ionicons
-                            name="arrow-forward"
-                            size={13}
-                            color={COLORS.primary}
+                            name="document-outline"
+                            size={10}
+                            color={COLORS.gold}
                           />
-                        </LinearGradient>
-                      </TouchableOpacity>
-                    </>
-                  )}
-                </View>
+                          <Text style={styles.chipTxt}>
+                            {t("quran.page")} {lastRead.page}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.heroCtaWrap}
+                      activeOpacity={0.85}
+                      onPress={() =>
+                        router.push(`/surah/${lastRead?.surahNumber}` as any)
+                      }
+                    >
+                      <LinearGradient
+                        colors={["#F9BD64", "#F59E0B"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.heroCta}
+                      >
+                        <Ionicons
+                          name="book"
+                          size={13}
+                          color={COLORS.primary}
+                        />
+                        <Text style={styles.heroCtaTxt}>
+                          {t("home.continueReading")}
+                        </Text>
+                        <Ionicons
+                          name="arrow-forward"
+                          size={13}
+                          color={COLORS.primary}
+                        />
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
 
-                <Image
-                  source={quranImage}
-                  style={styles.quranImg}
-                  resizeMode="contain"
-                />
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
+                  <Image
+                    source={quranImage}
+                    style={styles.quranImg}
+                    resizeMode="contain"
+                  />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* ── Course Registration Banner ── */}
-          <Animated.View
-            style={[styles.bannerWrap, entrance(bannerAnim, 28)]}
-          >
+          <View style={styles.bannerWrap}>
             <Pressable onPress={() => router.push("/course-register" as any)}>
               <LinearGradient
                 colors={["#10B981", "#059669", "#047857"]}
@@ -548,16 +494,18 @@ export default function QuranScreen() {
                   </View>
                 </View>
                 <View style={styles.bannerIconWrap}>
-                  <Ionicons name="school" size={44} color="rgba(255,255,255,0.15)" />
+                  <Ionicons
+                    name="school"
+                    size={44}
+                    color="rgba(255,255,255,0.15)"
+                  />
                 </View>
               </LinearGradient>
             </Pressable>
-          </Animated.View>
+          </View>
 
           {/* ── Quick Actions Row ── */}
-          <Animated.View
-            style={[styles.actionsSection, entrance(actionsAnim, 28)]}
-          >
+          <View style={styles.actionsSection}>
             <Text style={styles.sectionLabel}>{t("home.quickAccess")}</Text>
             <View style={styles.actionsRow}>
               {quickActions.map((qa) => (
@@ -577,7 +525,7 @@ export default function QuranScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-          </Animated.View>
+          </View>
 
           {/* ── Stats ── */}
           {/* <Animated.View style={[styles.statsSection, entrance(statsAnim, 20)]}>
@@ -600,7 +548,7 @@ export default function QuranScreen() {
           </Animated.View> */}
 
           {/* ── Tabs ── */}
-          <Animated.View style={[styles.tabsSection, entrance(tabsAnim, 16)]}>
+          <View style={styles.tabsSection}>
             <View style={styles.tabsRow}>
               {tabs.map((tab) => {
                 const active = activeTab === tab.key;
@@ -638,7 +586,7 @@ export default function QuranScreen() {
                 );
               })}
             </View>
-          </Animated.View>
+          </View>
 
           {/* ── List content ── */}
           <View>
@@ -762,14 +710,14 @@ const styles = StyleSheet.create({
   },
 
   // Hero card
-  heroPad: { paddingHorizontal: SPACING["2xl"], marginBottom: SPACING.xl },
+  heroPad: { paddingHorizontal: SPACING["2xl"], marginBottom: SPACING.lg },
   heroGrad: {
     borderRadius: 24,
-    padding: SPACING.xl,
+    padding: Platform.OS === "android" ? SPACING.lg : SPACING.xl,
     paddingRight: 0,
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 200,
+    minHeight: Platform.OS === "android" ? 175 : 200,
     overflow: "hidden",
     shadowColor: "#7C3AED",
     shadowOffset: { width: 0, height: 12 },

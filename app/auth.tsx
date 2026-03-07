@@ -4,16 +4,16 @@ import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -90,7 +90,7 @@ export default function AuthScreen() {
           ) {
             setError(t("auth.errorEmailExists"));
           } else {
-            setError(err);
+            setError(t("errors.generic"));
           }
         } else {
           router.replace("/(tabs)" as any);
@@ -215,7 +215,9 @@ export default function AuthScreen() {
                   textContentType="oneTimeCode"
                   autoComplete="off"
                   returnKeyType={mode === "signUp" ? "next" : "done"}
-                  submitBehavior={mode === "signUp" ? "submit" : "blurAndSubmit"}
+                  submitBehavior={
+                    mode === "signUp" ? "submit" : "blurAndSubmit"
+                  }
                   onSubmitEditing={() => {
                     if (mode === "signUp") {
                       confirmPasswordRef.current?.focus();

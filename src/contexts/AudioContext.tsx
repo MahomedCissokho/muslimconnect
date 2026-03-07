@@ -1,25 +1,24 @@
 import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 
 import {
-    audioPlayer,
-    type AudioTrack,
-    type PlaybackState,
+  audioPlayer,
+  type AudioTrack,
+  type PlaybackState,
 } from "../services/audio";
-import { settingsService } from "../services/settings";
-import { useSettings } from "./SettingsContext";
 import {
-    buildHizbPlaylist,
-    buildJuzPlaylist,
-    buildPagePlaylist,
-    buildSurahPlaylist,
+  buildHizbPlaylist,
+  buildJuzPlaylist,
+  buildPagePlaylist,
+  buildSurahPlaylist,
 } from "../utils/playlistBuilder";
+import { useSettings } from "./SettingsContext";
 
 interface AudioContextValue {
   playbackState: PlaybackState;
@@ -60,10 +59,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!origin) return;
 
     let newPlaylist: AudioTrack[] = [];
-    if (origin.type === "surah") newPlaylist = buildSurahPlaylist(origin.id, reciterId);
-    if (origin.type === "juz") newPlaylist = buildJuzPlaylist(origin.id, reciterId);
-    if (origin.type === "hizb") newPlaylist = buildHizbPlaylist(origin.id, reciterId);
-    if (origin.type === "page") newPlaylist = buildPagePlaylist(origin.id, reciterId);
+    if (origin.type === "surah")
+      newPlaylist = buildSurahPlaylist(origin.id, reciterId);
+    if (origin.type === "juz")
+      newPlaylist = buildJuzPlaylist(origin.id, reciterId);
+    if (origin.type === "hizb")
+      newPlaylist = buildHizbPlaylist(origin.id, reciterId);
+    if (origin.type === "page")
+      newPlaylist = buildPagePlaylist(origin.id, reciterId);
 
     if (newPlaylist.length === 0) return;
 
@@ -93,10 +96,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             // Session lookup can fail when app transitions to background
           }
         }
+      } else if (nextAppState === "active" && wasPlayingRef.current) {
+        wasPlayingRef.current = false;
+        try {
+          await audioPlayer.resume();
+        } catch {
+          // Session lookup can fail when app transitions back
+        }
       }
     };
 
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
     return () => subscription.remove();
   }, []);
 

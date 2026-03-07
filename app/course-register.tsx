@@ -16,12 +16,14 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { CountryPickerModal } from "../src/components/CourseRegister/CountryPickerModal";
 import { CourseRegistrationSuccess } from "../src/components/CourseRegister/CourseRegistrationSuccess";
-
 
 import backIcon from "../assets/images/back.png";
 import {
@@ -45,13 +47,12 @@ const SUBJECTS: { key: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "sira", icon: "time" },
 ];
 
-const FORMATS = ["formatInPerson", "formatOnline", "formatBoth"] as const;
+const FORMATS = ["formatInPerson", "formatOnline"] as const;
 const LEVELS = ["levelBeginner", "levelIntermediate", "levelAdvanced"] as const;
 
 const FORMAT_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   formatInPerson: "people",
   formatOnline: "videocam",
-  formatBoth: "apps",
 };
 const LEVEL_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   levelBeginner: "leaf",
@@ -66,20 +67,18 @@ const PHONE_REGEX = /^\d{6,15}$/;
 
 export default function CourseRegisterScreen() {
   const router = useRouter();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { user } = useAuth();
-
 
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const confirmScale = useRef(new Animated.Value(0)).current;
   const scrollRef = useRef<ScrollView>(null);
 
   const [step, setStep] = useState(1);
 
   // Step 1 — pre-fill from profile
   const [fullName, setFullName] = useState(
-    () => (user?.user_metadata?.full_name as string) ?? ""
+    () => (user?.user_metadata?.full_name as string) ?? "",
   );
   const [countryCode, setCountryCode] = useState("+221");
   const [countryFlag, setCountryFlag] = useState("🇸🇳");
@@ -104,8 +103,6 @@ export default function CourseRegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
-
-
 
   // ── Validation helpers ──
 
@@ -171,9 +168,8 @@ export default function CourseRegisterScreen() {
     setSubmitting(true);
     try {
       const subjectLabels = selectedSubjects
-        .map(
-          (k) =>
-            t(`courseRegister.subject${k.charAt(0).toUpperCase() + k.slice(1)}`)
+        .map((k) =>
+          t(`courseRegister.subject${k.charAt(0).toUpperCase() + k.slice(1)}`),
         )
         .join(", ");
 
@@ -197,13 +193,16 @@ export default function CourseRegisterScreen() {
         },
       };
 
-      console.log("📧 [EmailJS] Sending with payload:", JSON.stringify(payload, null, 2));
+      console.log(
+        "📧 [EmailJS] Sending with payload:",
+        JSON.stringify(payload, null, 2),
+      );
 
       const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Origin": "http://localhost",
+          Origin: "http://localhost",
         },
         body: JSON.stringify(payload),
       });
@@ -219,12 +218,6 @@ export default function CourseRegisterScreen() {
 
       console.log("📧 [EmailJS] SUCCESS ✅");
       setConfirmed(true);
-      Animated.spring(confirmScale, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }).start();
     } catch (err: any) {
       console.error("📧 [EmailJS] CATCH error:", err?.message || err);
       setError(t("courseRegister.errorSubmit"));
@@ -250,7 +243,7 @@ export default function CourseRegisterScreen() {
           [geo.subregion, geo.city, geo.region, geo.country]
             .filter(Boolean)
             .filter((v, i, a) => a.indexOf(v) === i) // dedupe
-            .join(", ")
+            .join(", "),
         );
         setLocationDetected(true);
       }
@@ -266,7 +259,6 @@ export default function CourseRegisterScreen() {
   if (confirmed) {
     return (
       <CourseRegistrationSuccess
-        confirmScale={confirmScale}
         selectedSubjects={selectedSubjects}
         format={format}
         level={level}
@@ -286,7 +278,11 @@ export default function CourseRegisterScreen() {
       {/* Header */}
       <View style={$.header}>
         <Pressable onPress={handleBack} style={$.headerBack}>
-          <Image source={backIcon} style={$.headerBackIcon} resizeMode="contain" />
+          <Image
+            source={backIcon}
+            style={$.headerBackIcon}
+            resizeMode="contain"
+          />
         </Pressable>
         <View style={{ flex: 1, alignItems: "center" }}>
           <Text style={$.headerTitle}>{t("courseRegister.screenTitle")}</Text>
@@ -490,7 +486,9 @@ export default function CourseRegisterScreen() {
             {/* ═══ STEP 2 ═══ */}
             {step === 2 && (
               <>
-                <Text style={$.sectionHead}>{t("courseRegister.location")}</Text>
+                <Text style={$.sectionHead}>
+                  {t("courseRegister.location")}
+                </Text>
 
                 <Pressable
                   onPress={handleUseLocation}
@@ -608,17 +606,13 @@ export default function CourseRegisterScreen() {
                           setSelectedSubjects((p) =>
                             p.includes(sub.key)
                               ? p.filter((x) => x !== sub.key)
-                              : [...p, sub.key]
+                              : [...p, sub.key],
                           )
                         }
                       >
                         {on && (
                           <View style={$.gridCheck}>
-                            <Ionicons
-                              name="checkmark"
-                              size={11}
-                              color="#fff"
-                            />
+                            <Ionicons name="checkmark" size={11} color="#fff" />
                           </View>
                         )}
                         <View style={[$.gridIconBg, on && $.gridIconBgOn]}>
@@ -633,7 +627,7 @@ export default function CourseRegisterScreen() {
                           numberOfLines={2}
                         >
                           {t(
-                            `courseRegister.subject${sub.key.charAt(0).toUpperCase() + sub.key.slice(1)}`
+                            `courseRegister.subject${sub.key.charAt(0).toUpperCase() + sub.key.slice(1)}`,
                           )}
                         </Text>
                       </Pressable>
@@ -693,7 +687,17 @@ export default function CourseRegisterScreen() {
       </KeyboardAvoidingView>
 
       {/* Bottom */}
-      <View style={[$.bottom, { paddingBottom: 20 + insets.bottom }]}>
+      <View
+        style={[
+          $.bottom,
+          {
+            paddingBottom:
+              Platform.OS === "android"
+                ? 32 + insets.bottom
+                : 20 + insets.bottom,
+          },
+        ]}
+      >
         {step > 1 && (
           <Pressable style={$.bottomBack} onPress={handleBack}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
@@ -806,7 +810,10 @@ const $ = StyleSheet.create({
   },
 
   // Scroll
-  scrollPad: { paddingHorizontal: 20, paddingBottom: 30 },
+  scrollPad: {
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === "android" ? 100 : 30,
+  },
 
   // Error banner
   errorBanner: {
@@ -1093,5 +1100,4 @@ const $ = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   bottomNextTextDim: { color: "#666" },
-
 });

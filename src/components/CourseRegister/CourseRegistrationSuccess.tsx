@@ -3,18 +3,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, FONTS } from "../../constants";
 
 interface Props {
-  confirmScale: Animated.Value;
   selectedSubjects: string[];
   format: string;
   level: string;
 }
 
-export function CourseRegistrationSuccess({ confirmScale }: Props) {
+export function CourseRegistrationSuccess(_props: Props) {
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -31,8 +30,8 @@ export function CourseRegistrationSuccess({ confirmScale }: Props) {
       <View style={$.glowBottom} />
 
       <View style={$.content}>
-        {/* Success icon with animated ring */}
-        <Animated.View style={[$.iconWrap, { transform: [{ scale: confirmScale }] }]}>
+        {/* Success icon */}
+        <View style={$.iconWrap}>
           <View style={$.iconOuterRing}>
             <LinearGradient
               colors={["#10B981", "#059669"]}
@@ -41,11 +40,13 @@ export function CourseRegistrationSuccess({ confirmScale }: Props) {
               <Ionicons name="checkmark" size={52} color="#fff" />
             </LinearGradient>
           </View>
-        </Animated.View>
+        </View>
 
         {/* Title */}
         <Text style={$.title}>
-          {t("courseRegister.confirmTitle", { defaultValue: "Demande enregistrée" })}
+          {t("courseRegister.confirmTitle", {
+            defaultValue: "Demande enregistrée",
+          })}
         </Text>
 
         {/* Divider */}
@@ -59,13 +60,14 @@ export function CourseRegistrationSuccess({ confirmScale }: Props) {
         <View style={$.subtitleCard}>
           <Text style={$.subtitle}>
             {t("courseRegister.confirmSubtitle", {
-              defaultValue: "Nous vous contacterons très prochainement par WhatsApp / Téléphone pour finaliser votre inscription.",
+              defaultValue:
+                "Nous vous contacterons très prochainement par WhatsApp / Téléphone pour finaliser votre inscription.",
             })}
           </Text>
         </View>
       </View>
 
-      {/* CTAs */}
+      {/* CTA */}
       <View style={$.actions}>
         <Pressable
           style={{ width: "100%", borderRadius: 20, overflow: "hidden" }}
@@ -77,13 +79,9 @@ export function CourseRegistrationSuccess({ confirmScale }: Props) {
             end={{ x: 1, y: 0 }}
             style={$.cta}
           >
-            <Ionicons name="book-outline" size={20} color={COLORS.primary} />
-            <Text style={$.ctaText}>{t("courseRegister.confirmExplore")}</Text>
+            <Ionicons name="home-outline" size={20} color={COLORS.primary} />
+            <Text style={$.ctaText}>{t("courseRegister.backToHome")}</Text>
           </LinearGradient>
-        </Pressable>
-        <Pressable onPress={() => router.replace("/(tabs)" as any)} style={$.secondary}>
-          <Ionicons name="home-outline" size={18} color={COLORS.gray400} />
-          <Text style={$.secondaryText}>{t("courseRegister.backToHome")}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -201,16 +199,5 @@ const $ = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 17,
     fontFamily: FONTS.bold,
-  },
-  secondary: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 12,
-  },
-  secondaryText: {
-    color: COLORS.gray400,
-    fontSize: 15,
-    fontFamily: FONTS.regular,
   },
 });

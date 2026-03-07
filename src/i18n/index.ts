@@ -1,9 +1,9 @@
-import * as Localization from 'expo-localization';
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import * as Localization from "expo-localization";
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
-import en from './locales/en.json';
-import fr from './locales/fr.json';
+import en from "./locales/en.json";
+import fr from "./locales/fr.json";
 
 const resources = {
   en: { translation: en },
@@ -13,17 +13,18 @@ const resources = {
 // Détecte la langue du système
 const getDeviceLanguage = (): string => {
   const locale = Localization.getLocales()[0]?.languageCode;
-  return locale && ['en', 'fr'].includes(locale) ? locale : 'fr';
+  return locale && ["en", "fr"].includes(locale) ? locale : "fr";
 };
 
+// eslint-disable-next-line import/no-named-as-default-member
 i18n.use(initReactI18next).init({
   resources,
   lng: getDeviceLanguage(),
-  fallbackLng: 'fr',
+  fallbackLng: "fr",
   interpolation: {
     escapeValue: false,
   },
-  compatibilityJSON: 'v4',
+  compatibilityJSON: "v4",
 });
 
 export default i18n;

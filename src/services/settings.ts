@@ -8,6 +8,7 @@ const KEYS = {
   RECITER_ID: "@settings/reciterId",
   DISPLAY_OPTIONS: "@settings/displayOptions",
   LANGUAGE: "@settings/language",
+  PLAYER_POSITION: "@settings/playerPosition",
 } as const;
 
 // --- Types ---
@@ -36,6 +37,9 @@ const getDeviceDefault = (): AppLanguage => {
 };
 
 export const DEFAULT_LANGUAGE: AppLanguage = getDeviceDefault();
+
+// Default player position (0 = normal position above tab bar)
+export const DEFAULT_PLAYER_POSITION = 0;
 
 // --- Service ---
 export const settingsService = {
@@ -77,5 +81,23 @@ export const settingsService = {
 
   async setLanguage(lang: AppLanguage): Promise<void> {
     await AsyncStorage.setItem(KEYS.LANGUAGE, lang);
+  },
+
+  // Player position (for draggable AudioPlayerBar)
+  async getPlayerPosition(): Promise<number> {
+    const value = await AsyncStorage.getItem(KEYS.PLAYER_POSITION);
+    if (value) {
+      try {
+        const parsed = JSON.parse(value);
+        return typeof parsed === "number" ? parsed : DEFAULT_PLAYER_POSITION;
+      } catch {
+        return DEFAULT_PLAYER_POSITION;
+      }
+    }
+    return DEFAULT_PLAYER_POSITION;
+  },
+
+  async setPlayerPosition(position: number): Promise<void> {
+    await AsyncStorage.setItem(KEYS.PLAYER_POSITION, JSON.stringify(position));
   },
 };

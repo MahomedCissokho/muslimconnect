@@ -1,22 +1,28 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Animated,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Animated,
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import backIcon from "../../assets/images/back.png";
 import { BORDER_RADIUS, COLORS, FONTS, SPACING } from "../../src/constants";
-import { ALLAH_NAMES } from "../../src/data/allahNames";
 import type { AllahName } from "../../src/data/allahNames";
+import { ALLAH_NAMES } from "../../src/data/allahNames";
 import { allahNamesService } from "../../src/services/allahNamesProgress";
 
 export default function FlashcardsScreen() {
@@ -48,7 +54,9 @@ export default function FlashcardsScreen() {
   }, [showUnlearnedOnly, learnedIds]);
 
   const currentName = deck[currentIndex] ?? deck[0];
-  const isCurrentLearned = currentName ? learnedIds.includes(currentName.number) : false;
+  const isCurrentLearned = currentName
+    ? learnedIds.includes(currentName.number)
+    : false;
 
   const handleReveal = () => {
     if (!revealed) {
@@ -108,7 +116,11 @@ export default function FlashcardsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()}>
-            <Image source={backIcon} style={styles.headerIcon} resizeMode="contain" />
+            <Image
+              source={backIcon}
+              style={styles.headerIcon}
+              resizeMode="contain"
+            />
           </Pressable>
           <Text style={styles.headerTitle}>
             {t("allahNames.flashcards", { defaultValue: "Flashcards" })}
@@ -116,7 +128,11 @@ export default function FlashcardsScreen() {
           <View style={{ width: 24 }} />
         </View>
         <View style={styles.emptyContainer}>
-          <Ionicons name="checkmark-done-circle" size={64} color={COLORS.success} />
+          <Ionicons
+            name="checkmark-done-circle"
+            size={64}
+            color={COLORS.success}
+          />
           <Text style={styles.emptyTitle}>
             {lang === "fr" ? "Bravo ! Tous appris !" : "Great! All learned!"}
           </Text>
@@ -135,7 +151,11 @@ export default function FlashcardsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()}>
-          <Image source={backIcon} style={styles.headerIcon} resizeMode="contain" />
+          <Image
+            source={backIcon}
+            style={styles.headerIcon}
+            resizeMode="contain"
+          />
         </Pressable>
         <Text style={styles.headerTitle}>
           {t("allahNames.flashcards", { defaultValue: "Flashcards" })}
@@ -146,18 +166,42 @@ export default function FlashcardsScreen() {
       {/* Filter toggle */}
       <View style={styles.filterRow}>
         <Pressable
-          style={[styles.filterBtn, !showUnlearnedOnly && styles.filterBtnActive]}
-          onPress={() => { setShowUnlearnedOnly(false); setCurrentIndex(0); setRevealed(false); }}
+          style={[
+            styles.filterBtn,
+            !showUnlearnedOnly && styles.filterBtnActive,
+          ]}
+          onPress={() => {
+            setShowUnlearnedOnly(false);
+            setCurrentIndex(0);
+            setRevealed(false);
+          }}
         >
-          <Text style={[styles.filterText, !showUnlearnedOnly && styles.filterTextActive]}>
+          <Text
+            style={[
+              styles.filterText,
+              !showUnlearnedOnly && styles.filterTextActive,
+            ]}
+          >
             {t("allahNames.allNames", { defaultValue: "Tous" })}
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.filterBtn, showUnlearnedOnly && styles.filterBtnActive]}
-          onPress={() => { setShowUnlearnedOnly(true); setCurrentIndex(0); setRevealed(false); }}
+          style={[
+            styles.filterBtn,
+            showUnlearnedOnly && styles.filterBtnActive,
+          ]}
+          onPress={() => {
+            setShowUnlearnedOnly(true);
+            setCurrentIndex(0);
+            setRevealed(false);
+          }}
         >
-          <Text style={[styles.filterText, showUnlearnedOnly && styles.filterTextActive]}>
+          <Text
+            style={[
+              styles.filterText,
+              showUnlearnedOnly && styles.filterTextActive,
+            ]}
+          >
             {t("allahNames.unlearnedOnly", { defaultValue: "Non appris" })}
           </Text>
         </Pressable>
@@ -179,17 +223,13 @@ export default function FlashcardsScreen() {
       {/* Card */}
       <View style={styles.cardArea}>
         <Animated.View
-          style={[
-            styles.card,
-            { transform: [{ scale: scaleAnim }] },
-          ]}
+          style={[styles.card, { transform: [{ scale: scaleAnim }] }]}
         >
-          <Pressable
-            onPress={handleReveal}
-            style={styles.cardTouchable}
-          >
+          <Pressable onPress={handleReveal} style={styles.cardTouchable}>
             <LinearGradient
-              colors={revealed ? ["#4A1D96", "#672CBC"] : ["#121A3A", "#1a2550"]}
+              colors={
+                revealed ? ["#4A1D96", "#672CBC"] : ["#121A3A", "#1a2550"]
+              }
               style={styles.cardGradient}
             >
               {/* Number */}
@@ -215,9 +255,15 @@ export default function FlashcardsScreen() {
                 </View>
               ) : (
                 <View style={styles.tapHint}>
-                  <Ionicons name="eye-outline" size={20} color={COLORS.gray500} />
+                  <Ionicons
+                    name="eye-outline"
+                    size={20}
+                    color={COLORS.gray500}
+                  />
                   <Text style={styles.tapHintText}>
-                    {t("allahNames.tapToReveal", { defaultValue: "Appuyez pour révéler" })}
+                    {t("allahNames.tapToReveal", {
+                      defaultValue: "Appuyez pour révéler",
+                    })}
                   </Text>
                 </View>
               )}
@@ -249,7 +295,10 @@ export default function FlashcardsScreen() {
         ) : (
           <View style={styles.navArrows}>
             <Pressable
-              style={[styles.arrowBtn, currentIndex === 0 && styles.arrowBtnDisabled]}
+              style={[
+                styles.arrowBtn,
+                currentIndex === 0 && styles.arrowBtnDisabled,
+              ]}
               onPress={handlePrev}
               disabled={currentIndex === 0}
             >
@@ -260,14 +309,19 @@ export default function FlashcardsScreen() {
               />
             </Pressable>
             <Pressable
-              style={[styles.arrowBtn, currentIndex >= deck.length - 1 && styles.arrowBtnDisabled]}
+              style={[
+                styles.arrowBtn,
+                currentIndex >= deck.length - 1 && styles.arrowBtnDisabled,
+              ]}
               onPress={handleNext}
               disabled={currentIndex >= deck.length - 1}
             >
               <Ionicons
                 name="chevron-forward"
                 size={24}
-                color={currentIndex < deck.length - 1 ? COLORS.white : COLORS.gray600}
+                color={
+                  currentIndex < deck.length - 1 ? COLORS.white : COLORS.gray600
+                }
               />
             </Pressable>
           </View>
@@ -386,7 +440,8 @@ const styles = StyleSheet.create({
     fontSize: 52,
     fontFamily: FONTS.arabicBold,
     textAlign: "center",
-    lineHeight: 72,
+    lineHeight: 82,
+    paddingTop: 10,
     marginBottom: SPACING.md,
   },
   cardTransliteration: {
